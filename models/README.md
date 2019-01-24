@@ -1,48 +1,49 @@
 ### HR-Net
-The h5 or hdf5 model files and log files trained on PETA.There is my ```./models```:
-models
-├── imagenet_models
-│   ├── GoogLeNet_berk
-│   │   ├── binary61_depth9_log.csv
-│   │   ├── binary9-depth9_epoch25_valloss0.64.hdf5
-│   │   ├── binary9-depth9_epoch75_valloss0.64.hdf5
-│   │   ├── binary9-depth9_final_model.h5
-│   │   └── binary9-depth9_log.csv
-│   ├── GoogLeNet_PETA
-│   │   ├── binary61_depth1_epoch50_valloss0.25.hdf5
-│   │   ├── binary61_depth1_final200_model.h5
-│   │   ├── binary61_depth1_log.csv
-│   │   ├── binary61_depth2_epoch100_valloss0.23.hdf5
-│   │   ├── binary61_depth2_epoch50_valloss0.23.hdf5
-│   │   ├── binary61_depth2_final_model.h5
-│   │   ├── binary61_depth2_log.csv
-│   │   ├── binary61_depth3_epoch100_valloss0.21.hdf5
-│   │   ├── binary61_depth3_epoch50_valloss0.22.hdf5
-│   │   ├── binary61_depth3_final_model.h5
-│   │   ├── binary61_depth3_log.csv
-│   │   ├── binary61_depth4_epoch100_valloss0.20.hdf5
-│   │   ├── binary61_depth4_epoch50_valloss0.20.hdf5
-│   │   ├── binary61_depth4_final_model.h5
-│   │   ├── binary61_depth4_log.csv
-│   │   ├── binary61_depth5_epoch100_valloss0.18.hdf5
-│   │   ├── binary61_depth5_epoch50_valloss0.19.hdf5
-│   │   ├── binary61_depth5_final_model.h5
-│   │   ├── binary61_depth5_log.csv
-│   │   ├── binary61_depth6_epoch100_valloss0.16.hdf5
-│   │   ├── binary61_depth6_epoch50_valloss0.17.hdf5
-│   │   ├── binary61_depth6_final_model.h5
-│   │   ├── binary61_depth6_log.csv
-│   │   ├── binary61_depth7_epoch100_valloss0.15.hdf5
-│   │   ├── binary61_depth7_epoch50_valloss0.15.hdf5
-│   │   ├── binary61_depth7_final_model.h5
-│   │   ├── binary61_depth7_log.csv
-│   │   ├── binary61_depth8_epoch100_valloss0.14.hdf5
-│   │   ├── binary61_depth8_epoch50_valloss0.14.hdf5
-│   │   ├── binary61_depth8_final_model.h5
-│   │   ├── binary61_depth8_log.csv
-│   │   ├── binary61_epoch100_valloss0.11.hdf5
-│   │   ├── binary61_epoch50_valloss0.15.hdf5
-│   │   ├── binary61_final_model.h5
+The h5 or hdf5 model files and log files trained on PETA.There is my ```./models```:  
+```
+models 
+├── imagenet_models  
+│   ├── GoogLeNet_berk  
+│   │   ├── binary61_depth9_log.csv  
+│   │   ├── binary9-depth9_epoch25_valloss0.64.hdf5  
+│   │   ├── binary9-depth9_epoch75_valloss0.64.hdf5  
+│   │   ├── binary9-depth9_final_model.h5  
+│   │   └── binary9-depth9_log.csv  
+│   ├── GoogLeNet_PETA  
+│   │   ├── binary61_depth1_epoch50_valloss0.25.hdf5  
+│   │   ├── binary61_depth1_final200_model.h5  
+│   │   ├── binary61_depth1_log.csv  
+│   │   ├── binary61_depth2_epoch100_valloss0.23.hdf5  
+│   │   ├── binary61_depth2_epoch50_valloss0.23.hdf5  
+│   │   ├── binary61_depth2_final_model.h5  
+│   │   ├── binary61_depth2_log.csv  
+│   │   ├── binary61_depth3_epoch100_valloss0.21.hdf5  
+│   │   ├── binary61_depth3_epoch50_valloss0.22.hdf5  
+│   │   ├── binary61_depth3_final_model.h5  
+│   │   ├── binary61_depth3_log.csv  
+│   │   ├── binary61_depth4_epoch100_valloss0.20.hdf5  
+│   │   ├── binary61_depth4_epoch50_valloss0.20.hdf5  
+│   │   ├── binary61_depth4_final_model.h5  
+│   │   ├── binary61_depth4_log.csv  
+│   │   ├── binary61_depth5_epoch100_valloss0.18.hdf5  
+│   │   ├── binary61_depth5_epoch50_valloss0.19.hdf5  
+│   │   ├── binary61_depth5_final_model.h5  
+│   │   ├── binary61_depth5_log.csv  
+│   │   ├── binary61_depth6_epoch100_valloss0.16.hdf5  
+│   │   ├── binary61_depth6_epoch50_valloss0.17.hdf5  
+│   │   ├── binary61_depth6_final_model.h5  
+│   │   ├── binary61_depth6_log.csv  
+│   │   ├── binary61_depth7_epoch100_valloss0.15.hdf5  
+│   │   ├── binary61_depth7_epoch50_valloss0.15.hdf5  
+│   │   ├── binary61_depth7_final_model.h5  
+│   │   ├── binary61_depth7_log.csv  
+│   │   ├── binary61_depth8_epoch100_valloss0.14.hdf5  
+│   │   ├── binary61_depth8_epoch50_valloss0.14.hdf5  
+│   │   ├── binary61_depth8_final_model.h5  
+│   │   ├── binary61_depth8_log.csv  
+│   │   ├── binary61_epoch100_valloss0.11.hdf5  
+│   │   ├── binary61_epoch50_valloss0.15.hdf5  
+│   │   ├── binary61_final_model.h5  
 │   │   └── binary61_log.csv
 │   ├── GoogLeNet_RAP
 │   │   ├── binary3_b2_lr0.0002_epoch50_valloss0.54.hdf5
@@ -535,3 +536,4 @@ models
 │       ├── nohup.out
 │       └── train_final_model.h5
 └── plot.ipynb
+```
