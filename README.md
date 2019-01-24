@@ -2,7 +2,7 @@
 Our proposed model considers the abstraction level of the layer feature map with the attribute semantics together, and utilize the high-level attribute reasoning based on their dependencies on the low-level attributes. We show in an extensive evaluation on the PETA dataset that our proposed hierarchical reason attribute recognition model provides competitive performance for each attribute,  including the low-level attributes and high-level attributes, and improves on the published state-of-the-art on the dataset. The paper is published at [CVPR'19](http://arxiv.org/pdf/1512.04150.pdf).
 
 The framework of the HR-Net is as below:
-![Framework](https://github.com/waterahr/HR-Net/images/framework.jpg)
+![Framework](https://github.com/waterahr/HR-Net/images/framework.png)
 
 ### NEW: Tensorflow code
 You also could take a look at the [HR-Net_tensorflow](https://github.com/waterahr/HR-Net_tensorflow) to see the tensorflow version.
@@ -19,26 +19,29 @@ GoogLeNet model on ImageNet: ```./results/googlenet_weights.npy``` weights:
 [https://drive.google.com/open?id=1MMgfdNcO7uoNtQM8Tarsa8etyCbwbVd-]
 
 ### Usage Instructions:
-* Install [caffe](https://github.com/BVLC/caffe), compile the matcaffe (matlab wrapper for caffe), and make sure you could run the prediction example code classification.m.
 * Clone the code from Github:
 ```
-git clone https://github.com/metalbubble/CAM.git
-cd CAM
+git clone https://github.com/waterahr/HR-Net.git
+cd HR-Net
 ```
 * Download the pretrained network
 ```
-sh models/download.sh
+wget https://drive.google.com/open?id=1MMgfdNcO7uoNtQM8Tarsa8etyCbwbVd-
 ```
-* Run the demo code to generate the heatmap: in matlab terminal, 
+* Download the [PETA](http://mmlab.ie.cuhk.edu.hk/projects/PETA.html) dataset
+* Run the code ```./notebook/generating_pandas_dataframe_file.ipynb``` to generate the csv file to train and test the model
+* Train the model on the training set of PETA, the model file will be stored at ```./models/imagenet_models/MODELNAME_PETA```
 ```
-demo
+python train_PETA_hiarchical.py -g GPUSINDEX -m MODELNAME -c CLASSNUM -w WEIGHTSFILEPATH -wd IMAGEWIDTH -hg IMAGEHEIGHT -i INITIALEPOCH -b BATCHSIZE
 ```
-* Run the demo code to generate bounding boxes from the heatmap: in matlab terminal,
+* Test the model on the testing dataset of PETA, the prediction file will be stored at ```./results/predictions/MODELNAME_SAVENAME_WEIGHTSNAME_predictions_imagenet_test7600.npy```
 ```
-generate_bbox
+python test_PETA_hiarchical.py -g GPUSINDEX -m MODELNAME -c CLASSNUM -w WEIGHTSFILEPATH -wd IMAGEWIDTH -hg IMAGEHEIGHT
 ```
-
-The demo video of what the CNN is looking is [here](https://www.youtube.com/watch?v=fZvOy0VXWAI). The reimplementation in tensorflow is [here](https://github.com/jazzsaxmafia/Weakly_detector). The pycaffe wrapper of CAM is reimplemented at [here](https://github.com/gcucurull/CAM-Python).
+* Run the web demo to show the pedestrian image and its attribute recognition result
+```
+python app.py -g GPUSINDEX
+```
 
 ### Reference:
 ```
