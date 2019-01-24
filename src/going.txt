@@ -1,0 +1,20 @@
+python train_PETA.py -g 0 -c 14 -b 64 -m OEDCGoogLeNetSPP_lowerBody -> nohup.out(mv src/nohup.out models/OEDCWPAL_PETA_lowerBody/)
+
+python train_PETA.py -g 0 -c 61 -b 256 -m GoogLeNetSPP -> nohup.out(mv nohup.out ../models/WPAL_PETA/binary61_nohup.out)
+python train_PETA_hiarchical.py -m hiarGoogLeNetSPP -c 61 -g 1 -> nohup.out(mv nohup.out ../models/hiarGoogLeNetSPP_PETA/binary61_nohup.out)
+python train_PETA.py -g 1 -c 61 -b 256 -m GoogLeNet -> nohup.out(mv nohup.out ../models/GoogLeNet_PETA/binary61_nohup.out)
+python train_PETA_hiarchical.py -m hiarGoogLeNet -c 61 -g 1 -> nohup.out(mv nohup.out ../models/hiarGoogLeNet_PETA/binary61_nohup.out)
+
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -> nohup.out(mv nohup.out ../models/hiarBayesGoogLeNet_PETA/binary61_levelup_nohup.out)
+
+python train_PETA_hiarchical.py -m hiarGoogLeNetWAM -c 61 -g 1 ->nohup.out(mv nohup.out ../models/hiarGoogLeNetWAM_PETA/binary61_nohup.out)
+
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -> nohup.out(mv nohup.out ../models/hiarBayesGoogLeNet_PETA/binary61_orig_nohup.out)
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -> nohup.out(mv nohup.out ../models/hiarBayesGoogLeNet_PETA/binary61_multi_nohup.out)
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -> nohup.out(mv nohup.out ../models/hiarBayesGoogLeNet_PETA/binary61_multi_loss_nohup.out)
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 0 -> ../models/hiarBayesGoogLeNet_PETA/binary61_multi_loss_ifelse_log.csv
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -> ../models/hiarBayesGoogLeNet_PETA/binary61_multi_loss2_log.csv
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 0 -> ../models/hiarBayesGoogLeNet_PETA/binary61_multi_loss2_ifelse_log.csv
+
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_PETA/binary61_multi_final_model.h5
+python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_PETA/binary61_multi_mar_final_model.h5
