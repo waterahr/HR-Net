@@ -2,7 +2,7 @@
 Our proposed model considers the abstraction level of the layer feature map with the attribute semantics together, and utilize the high-level attribute reasoning based on their dependencies on the low-level attributes. We show in an extensive evaluation on the PETA dataset that our proposed hierarchical reason attribute recognition model provides competitive performance for each attribute,  including the low-level attributes and high-level attributes, and improves on the published state-of-the-art on the dataset. The paper is published at [CVPR'19](http://arxiv.org/pdf/1512.04150.pdf).
 
 The framework of the HR-Net is as below:
-![Framework](https://github.com/waterahr/HR-Net/images/framework.png)
+![Framework](https://github.com/waterahr/HR-Net/tree/master/images/framework.png)
 
 ### NEW: Tensorflow code
 You also could take a look at the [HR-Net_tensorflow](https://github.com/waterahr/HR-Net_tensorflow) to see the tensorflow version.
@@ -42,6 +42,7 @@ python test_PETA_hiarchical.py -g GPUSINDEX -m MODELNAME -c CLASSNUM -w WEIGHTSF
 ```
 python app.py -g GPUSINDEX
 ```
+Then open your browser and enter the URL：```http://[your IP address running the app.py]:[your port running the app.py]```
 
 ### Reference:
 ```
