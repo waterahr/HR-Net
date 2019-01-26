@@ -19,6 +19,10 @@ GoogLeNet model on ImageNet: ```./results/googlenet_weights.npy``` weights:
 [https://drive.google.com/open?id=1MMgfdNcO7uoNtQM8Tarsa8etyCbwbVd-]
 
 ### Usage Instructions:
+* Install or clone the environment
+```
+conda env create --file HR-Net.yml
+```
 * Clone the code from Github:
 ```
 git clone https://github.com/waterahr/HR-Net.git
