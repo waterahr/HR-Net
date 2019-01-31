@@ -55,18 +55,18 @@ class GoogLeNet:
     def build(width, height, depth, classes, weights="imagenet", model_depth=9):
         inpt = Input(shape=(width, height, depth))
         #padding = 'same'，填充为(步长-1）/2,还可以用ZeroPadding2D((3,3))
-        x = GoogLeNet.Conv2d_BN(inpt, 64, (7,7), strides=(2,2), padding='same', name="conv1_7x7_s2", trainable=False)
-        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=False)(x)
-        x = GoogLeNet.Conv2d_BN(x, 192, (3,3), strides=(1,1), padding='same', name="conv2_3x3", trainable=False)
-        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=False)(x)
+        x = GoogLeNet.Conv2d_BN(inpt, 64, (7,7), strides=(2,2), padding='same', name="conv1_7x7_s2", trainable=True)
+        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=True)(x)
+        x = GoogLeNet.Conv2d_BN(x, 192, (3,3), strides=(1,1), padding='same', name="conv2_3x3", trainable=True)
+        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=True)(x)
         """
         x = GoogLeNet.Inception(x, 64, name="inception_3a")#256
         x = GoogLeNet.Inception(x, 120, name="inception_3b")#480
         """
-        x = GoogLeNet.Inception(x, [64,96,128,16,32,32], name="inception_3a", trainable=False)#256
+        x = GoogLeNet.Inception(x, [64,96,128,16,32,32], name="inception_3a", trainable=True)#256
         if model_depth==1: fea = x
-        x = GoogLeNet.Inception(x, [128,128,192,32,96,64], name="inception_3b", trainable=False)#480
-        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=False)(x)
+        x = GoogLeNet.Inception(x, [128,128,192,32,96,64], name="inception_3b", trainable=True)#480
+        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=True)(x)
         if model_depth==2: fea = x
         """
         x = GoogLeNet.Inception(x, 128, name="inception_4a")#512
@@ -75,24 +75,24 @@ class GoogLeNet:
         x = GoogLeNet.Inception(x, 132, name="inception_4d")#528
         x = GoogLeNet.Inception(x, 208, name="inception_4e")#832
         """
-        x = GoogLeNet.Inception(x, [192,96,208,16,48,64], name="inception_4a", trainable=False)#512
+        x = GoogLeNet.Inception(x, [192,96,208,16,48,64], name="inception_4a", trainable=True)#512
         if model_depth==3: fea = x
-        x = GoogLeNet.Inception(x, [160,112,224,24,64,64], name="inception_4b", trainable=False)
+        x = GoogLeNet.Inception(x, [160,112,224,24,64,64], name="inception_4b", trainable=True)
         if model_depth==4: fea = x
-        x = GoogLeNet.Inception(x, [128,128,256,24,64,64], name="inception_4c", trainable=False)
+        x = GoogLeNet.Inception(x, [128,128,256,24,64,64], name="inception_4c", trainable=True)
         if model_depth==5: fea = x
-        x = GoogLeNet.Inception(x, [112,144,288,32,64,64], name="inception_4d", trainable=False)#528
+        x = GoogLeNet.Inception(x, [112,144,288,32,64,64], name="inception_4d", trainable=True)#528
         if model_depth==6: fea = x
-        x = GoogLeNet.Inception(x, [256,160,320,32,128,128], name="inception_4e", trainable=False)#832
-        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=False)(x)
+        x = GoogLeNet.Inception(x, [256,160,320,32,128,128], name="inception_4e", trainable=True)#832
+        x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same', trainable=True)(x)
         if model_depth==7: fea = x
         """
         x = GoogLeNet.Inception(x, 208, name="inception_5a")
         x = GoogLeNet.Inception(x, 256, name="inception_5b")#1024
         """
-        x = GoogLeNet.Inception(x, [256,160,320,32,128,128], name="inception_5a", trainable=False)
+        x = GoogLeNet.Inception(x, [256,160,320,32,128,128], name="inception_5a", trainable=True)
         if model_depth==8: fea = x
-        x = GoogLeNet.Inception(x, [384,192,384,48,128,128], name="inception_5b", trainable=False)#1024
+        x = GoogLeNet.Inception(x, [384,192,384,48,128,128], name="inception_5b", trainable=True)#1024
         if model_depth==9: fea = x
         #x = AveragePooling2D(pool_size=(7,7), strides=(7,7), padding='same')(x)
         #x = GlobalAveragePooling2D()(x)

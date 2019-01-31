@@ -99,13 +99,13 @@ class hiarBayesGoogLeNet:
         x = hiarBayesGoogLeNet.Inception(x, [192,96,208,16,48,64], name="inception_4a")#512
         fea_low = Conv2D(512, (3, 3), padding='same', activation='relu', name='conv1_e')(x)
         fea_low = GlobalAveragePooling2D()(fea_low)#, name="gap_low"
-        #fea_low = Dense(512, activation='relu')(fea_low)
+        fea_low = Dense(512, activation='relu')(fea_low)
         x = hiarBayesGoogLeNet.Inception(x, [160,112,224,24,64,64], name="inception_4b")
         x = hiarBayesGoogLeNet.Inception(x, [128,128,256,24,64,64], name="inception_4c")
         x = hiarBayesGoogLeNet.Inception(x, [112,144,288,32,64,64], name="inception_4d")#528
         fea_mid = Conv2D(512, (3, 3), padding='same', activation='relu', name='conv2_e')(x)
         fea_mid = GlobalAveragePooling2D()(fea_mid)#, name="gap_mid"
-        #fea_mid = Dense(512, activation='relu')(fea_mid)
+        fea_mid = Dense(512, activation='relu')(fea_mid)
         x = hiarBayesGoogLeNet.Inception(x, [256,160,320,32,128,128], name="inception_4e")#832
         x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same')(x)
         """
@@ -116,7 +116,7 @@ class hiarBayesGoogLeNet:
         x = hiarBayesGoogLeNet.Inception(x, [384,192,384,48,128,128], name="inception_5b")#1024
         fea_hig = Conv2D(1024, (3, 3), padding='same', activation='relu', name='conv3_e')(x)
         fea_hig = GlobalAveragePooling2D()(fea_hig)#, name="gap_hig"
-        #fea_hig = Dense(1024, activation='relu')(fea_hig)
+        fea_hig = Dense(1024, activation='relu')(fea_hig)
         #"""
         predictions_low = Dense(classes[0], name="low", activation="sigmoid")(fea_low)#
         predictions_mid = Dense(classes[1], name="middle", activation="sigmoid")(fea_mid)#
