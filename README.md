@@ -21,6 +21,9 @@ GoogLeNet model on ImageNet: ```./results/googlenet_weights.npy``` weights:
 ### Usage Instructions:
 * Install or clone the environment
 ```
+bash Anaconda3-5.0.0-Linux-x86_64.sh
+    export PATH="/opt/anaconda3/bin:$PATH"
+    source ~/.bashrc
 conda env create --file HR-Net.yml
 ```
 * Clone the code from Github:
