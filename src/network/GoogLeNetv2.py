@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.append("..")
 import numpy as np
 from keras.models import Model
@@ -97,18 +98,80 @@ class GoogLeNet:
         if model_depth==9: fea = x
         #x = AveragePooling2D(pool_size=(7,7), strides=(7,7), padding='same')(x)
         #x = GlobalAveragePooling2D()(x)
-        x = GlobalAveragePooling2D()(fea)
-        #x = Flatten()(fea)
+        #x = GlobalAveragePooling2D()(fea)
+        x = Flatten()(fea)
         x = Dropout(0.4)(x)
         name1 = "dense_1"
-        name2 = "dense_2"
+        name2 = "dense_2_"
         if model_depth != 9:
             name1 += "_"+str(model_depth)
             name2 += "_"+str(model_depth)
-        x = Dense(1000, activation='linear', name=name1)(x)
-        x = Dense(classes, activation='sigmoid', name=name2)(x)
+        #x = Dense(1000, activation='linear', name=name1)(x)
+        x = Dense(1000, activation='relu', name=name1)(x)###dropout&flat&nolinear better
+        #x = Dense(classes, activation='sigmoid', name=name2)(x)
+        """
+        pred = Dense(1, activation='sigmoid', name=name2+str(0))(x)
+        for i in range(1, classes):
+            tmp = Dense(1, activation='sigmoid', name=name2+str(i))(x)
+            pred = concatenate([pred, tmp], axis=1)
+        x = pred
+        """
+        #"""
+        pred1 = Dense(1, activation='sigmoid', name=name2+str(1))(x)
+        pred2 = Dense(1, activation='sigmoid', name=name2+str(2))(x)
+        pred3 = Dense(1, activation='sigmoid', name=name2+str(3))(x)
+        pred4 = Dense(1, activation='sigmoid', name=name2+str(4))(x)
+        pred5 = Dense(1, activation='sigmoid', name=name2+str(5))(x)
+        pred6 = Dense(1, activation='sigmoid', name=name2+str(6))(x)
+        pred7 = Dense(1, activation='sigmoid', name=name2+str(7))(x)
+        pred8 = Dense(1, activation='sigmoid', name=name2+str(8))(x)
+        pred9 = Dense(1, activation='sigmoid', name=name2+str(9))(x)
+        pred10 = Dense(1, activation='sigmoid', name=name2+str(10))(x)
+        pred11 = Dense(1, activation='sigmoid', name=name2+str(11))(x)
+        pred12 = Dense(1, activation='sigmoid', name=name2+str(12))(x)
+        pred13 = Dense(1, activation='sigmoid', name=name2+str(13))(x)
+        pred14 = Dense(1, activation='sigmoid', name=name2+str(14))(x)
+        pred15 = Dense(1, activation='sigmoid', name=name2+str(15))(x)
+        pred16 = Dense(1, activation='sigmoid', name=name2+str(16))(x)
+        pred17 = Dense(1, activation='sigmoid', name=name2+str(17))(x)
+        pred18 = Dense(1, activation='sigmoid', name=name2+str(18))(x)
+        pred19 = Dense(1, activation='sigmoid', name=name2+str(19))(x)
+        pred20 = Dense(1, activation='sigmoid', name=name2+str(20))(x)
+        pred21 = Dense(1, activation='sigmoid', name=name2+str(21))(x)
+        pred22 = Dense(1, activation='sigmoid', name=name2+str(22))(x)
+        pred23 = Dense(1, activation='sigmoid', name=name2+str(23))(x)
+        pred24 = Dense(1, activation='sigmoid', name=name2+str(24))(x)
+        pred25 = Dense(1, activation='sigmoid', name=name2+str(25))(x)
+        pred26 = Dense(1, activation='sigmoid', name=name2+str(26))(x)
+        pred27 = Dense(1, activation='sigmoid', name=name2+str(27))(x)
+        pred28 = Dense(1, activation='sigmoid', name=name2+str(28))(x)
+        pred29 = Dense(1, activation='sigmoid', name=name2+str(29))(x)
+        pred30 = Dense(1, activation='sigmoid', name=name2+str(30))(x)
+        pred31 = Dense(1, activation='sigmoid', name=name2+str(31))(x)
+        pred32 = Dense(1, activation='sigmoid', name=name2+str(32))(x)
+        pred33 = Dense(1, activation='sigmoid', name=name2+str(33))(x)
+        pred34 = Dense(1, activation='sigmoid', name=name2+str(34))(x)
+        pred35 = Dense(1, activation='sigmoid', name=name2+str(35))(x)
+        pred36 = Dense(1, activation='sigmoid', name=name2+str(36))(x)
+        pred37 = Dense(1, activation='sigmoid', name=name2+str(37))(x)
+        pred38 = Dense(1, activation='sigmoid', name=name2+str(38))(x)
+        pred39 = Dense(1, activation='sigmoid', name=name2+str(39))(x)
+        pred40 = Dense(1, activation='sigmoid', name=name2+str(40))(x)
+        pred41 = Dense(1, activation='sigmoid', name=name2+str(41))(x)
+        pred42 = Dense(1, activation='sigmoid', name=name2+str(42))(x)
+        pred43 = Dense(1, activation='sigmoid', name=name2+str(43))(x)
+        pred44 = Dense(1, activation='sigmoid', name=name2+str(44))(x)
+        pred45 = Dense(1, activation='sigmoid', name=name2+str(45))(x)
+        pred46 = Dense(1, activation='sigmoid', name=name2+str(46))(x)
+        pred47 = Dense(1, activation='sigmoid', name=name2+str(47))(x)
+        pred48 = Dense(1, activation='sigmoid', name=name2+str(48))(x)
+        pred49 = Dense(1, activation='sigmoid', name=name2+str(49))(x)
+        pred50 = Dense(1, activation='sigmoid', name=name2+str(50))(x)
+        pred51 = Dense(1, activation='sigmoid', name=name2+str(51))(x)
+        #"""
         # create the model
-        model = Model(inpt, x, name='inception')
+        #model = Model(inpt, x, name='inception')
+        model = Model(inpt, [pred1,pred2,pred3,pred4,pred5,pred6,pred7,pred8,pred9,pred10,pred11,pred12,pred13,pred14,pred15,pred16,pred17,pred18,pred19,pred20,pred21,pred22,pred23,pred24,pred25,pred26,pred27,pred28,pred29,pred30,pred31,pred32,pred33,pred34,pred35,pred36,pred37,pred38,pred39,pred40,pred41,pred42,pred43,pred44,pred45,pred46,pred47,pred48,pred49,pred50,pred51], name='inception')
         # return the constructed network architecture
         if weights == "imagenet":
             print("ImageNet...")
@@ -126,5 +189,7 @@ class GoogLeNet:
         return model
 
 if __name__ == "__main__":
-    model = GoogLeNet.build(32, 32, 3, 10)#因为googleNet默认输入32*32的图片
-    plot_model(model, to_file="../../results/GoogleLenet.png", show_shapes=True)
+    os.environ['CUDA_VISIBLE_DEVICES'] = ""
+    model = GoogLeNet.build(32, 32, 3, 10, weights="None")#因为googleNet默认输入32*32的图片
+    model.summary()
+    plot_model(model, to_file="../../results/GoogleLenetv2.png", show_shapes=True)

@@ -53,7 +53,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary26_"
+    save_name = "binary26_75_"
     low_level = [15,16,17,18,19,20]
     mid_level = [7,8,9,10,11,12,13,14,21,22,23,24,25]
     high_level = [0,1,2,3,4,5,6]

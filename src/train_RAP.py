@@ -66,7 +66,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary51_b4_trainable_noweightloss_"
+    save_name = "binary51_b4_75_allin"
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     args = parse_arg()
@@ -126,9 +126,9 @@ if __name__ == "__main__":
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
     #"""
     split = np.load('../results/RAP_partion.npy').item()
-    X_train = data_x[list(split['train'][args.partion][:26614])]
+    X_train = data_x[list(split['train'][args.partion])]#[:26614]
     X_test = data_x[list(split['train'][args.partion][26614:])]
-    y_train = data_y[list(split['train'][args.partion][:26614])]#, len(low_level)+len(mid_level):
+    y_train = data_y[list(split['train'][args.partion])]#[:26614]##, len(low_level)+len(mid_level):
     y_test = data_y[list(split['train'][args.partion][26614:])]#, len(low_level)+len(mid_level):
     y_train_list = []
     y_test_list = []
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     
     #googleNet默认输入32*32的图片
     if args.model == "GoogLeNet":
-        model = GoogLeNet.build(None, None, 3, class_num)
+        model = GoogLeNet.build(image_height, image_width, 3, class_num)
         #loss_func = weighted_binary_crossentropy(alpha)
         loss_func = 'binary_crossentropy'
         #loss_func = K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
         model_dir = 'GoogLeNet_RAP'
     elif args.model == "GoogLeNetv2":
         model_dir = 'GoogLeNet_RAP'
-        save_name = "binary51_b4_dropout&fla&nolinear_multi2_"
+        save_name = "binary51_b4_75v2_"
     checkpointer = ModelCheckpoint(filepath = '../models/imagenet_models/' + model_dir + '/' + save_name+ '_epoch{epoch:02d}_valloss{'+ monitor + ':.2f}.hdf5',
                                    monitor = monitor,
                                    verbose=1, 
