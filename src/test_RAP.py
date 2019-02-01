@@ -47,7 +47,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary51_"
+    save_name = "binary51_75v2_"
     #save_name = "binary3_"
     #part = [2,11,24]
     args = parse_arg()
@@ -106,13 +106,13 @@ if __name__ == "__main__":
     #data_y = data_y[:, part]
     #class_num = 3
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    """
+    #"""
     split = np.load('../results/RAP_partion.npy').item()
     X_test = data_x[list(split['test'][0])]
     y_test = data_y[list(split['test'][0])]
-    """
-    X_test = data_x[33268:]
-    y_test = data_y[33268:]
+    #"""
+    #X_test = data_x[33268:]
+    #y_test = data_y[33268:]
     print("The shape of the X_test is: ", X_test.shape)
     print("The shape of the y_test is: ", y_test.shape)
     
@@ -139,6 +139,7 @@ if __name__ == "__main__":
     model.summary()
 
     model.load_weights(args.weight, by_name=True)
-    predictions = model.predict(X_test)
+    predictions_list = model.predict(X_test)
+    predictions = np.array(predictions_list).reshape((class_num, -1)).T
     print("The shape of the predictions_test is: ", predictions.shape)
     np.save("../results/predictions/" + args.model+ '_' + save_name + args.weight[args.weight.rindex('/')+1:-3] + "_predictions_imagenet_test_RAP.npy", predictions)

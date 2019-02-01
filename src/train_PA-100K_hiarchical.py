@@ -11,6 +11,7 @@ from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
 from network.hiarBayesGoogLenet import hiarBayesGoogLeNet
+from network.hiarBayesGoogLenetv2 import hiarBayesGoogLeNet as hiarBayesGoogLeNetv2
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 from keras.utils import multi_gpu_model
@@ -24,6 +25,14 @@ import numpy as np
 import pandas as pd
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
+
+def multi_generator(generator):
+    while True:
+        x, y = generator.next()
+        y_list = []
+        for i in range(y.shape[1]):
+            y_list.append(y[:, i])
+        yield x, y_list
 
 alpha = []
 
@@ -55,7 +64,7 @@ def parse_arg():
 
 
 if __name__ == "__main__":
-    save_name = "binary26_75"
+    save_name = "binary26_"
     low_level = [15,16,17,18,19,20]
     mid_level = [7,8,9,10,11,12,13,14,21,22,23,24,25]
     high_level = [0,1,2,3,4,5,6]
@@ -106,6 +115,8 @@ if __name__ == "__main__":
         filename = r"../results/PA-100K_labels_pd.csv"
     elif args.model == "hiarBayesGoogLeNet":
         filename = r"../results/PA-100K_labels_pd.csv"
+    elif args.model == "hiarBayesGoogLeNetv2":
+        filename = r"../results/PA-100K_labels_pd.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     #global alpha
@@ -139,6 +150,11 @@ if __name__ == "__main__":
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNetv2":
+        model = hiarBayesGoogLeNetv2.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
@@ -154,7 +170,7 @@ if __name__ == "__main__":
     monitor = 'val_loss'
     if args.model == "hiarGoogLeNet":
         model_dir = 'hiarGoogLeNet_PA-100K'
-    elif args.model == "hiarBayesGoogLeNet":
+    elif args.model == "hiarBayesGoogLeNet" or args.model == "hiarBayesGoogLeNetv2":
         model_dir = 'hiarBayesGoogLeNet_PA-100K'
     checkpointer = ModelCheckpoint(filepath = '../models/imagenet_models/' + model_dir + '/' + save_name+ '_epoch{epoch:02d}_valloss{'+ monitor + ':.2f}.hdf5',
                                    monitor = monitor,
@@ -170,10 +186,11 @@ if __name__ == "__main__":
     """
             , initial_epoch = 50,
     """
-    model.fit_generator(train_generator,
+    #multi_generator(train_generator),multi_generator(val_generator)
+    model.fit_generator(multi_generator(train_generator),
             steps_per_epoch = int(X_train.shape[0] / (batch_size * gpus_num)),
             epochs = nb_epoch,
-            validation_data = val_generator,
+            validation_data = multi_generator(val_generator),
             validation_steps = int(X_test.shape[0] / (batch_size * gpus_num)),
             callbacks = [checkpointer, csvlog])
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')

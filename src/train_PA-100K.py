@@ -6,6 +6,7 @@ python train_PA-100K.py -m GoogLeNet -c 26 -b 32 -g 0 -hg 160 -wd 75
 python train_PA-100K.py -m GoogLeNet -c 26 -b 64 -g 1
 """
 from network.GoogleLenet import GoogLeNet
+from network.GoogleLenetv2 import GoogLeNet as GoogLeNetv2
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -25,6 +26,14 @@ alpha = []
 
 def weighted_acc(y_true, y_pred):
     return K.mean(K.mean(K.equal(y_true, K.round(y_pred)), axis=-1), axis=-1)
+
+def multi_generator(generator):
+    while True:
+        x, y = generator.next()
+        y_list = []
+        for i in range(y.shape[1]):
+            y_list.append(y[:, i])
+        yield x, y_list
 
 def parse_arg():
     models = ['GoogLeNet']
@@ -55,7 +64,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary26_trainable_"
+    save_name = "binary26_"
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     args = parse_arg()
@@ -98,6 +107,8 @@ if __name__ == "__main__":
     if args.model == "GoogLeNet":
         filename = r"../results/PA-100K_labels_pd.csv"
         #filename = r"../results/myPA-100K_labels_pd.csv"
+    elif args.model == "GoogLeNetv2":
+        filename = r"../results/PA-100K_labels_pd.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     #global alpha
@@ -137,6 +148,14 @@ if __name__ == "__main__":
         loss_weights = None
         metrics=['accuracy']
         #metrics = [weighted_acc]
+    elif args.model == "GoogLeNetv2":
+        model = GoogLeNetv2.build(image_height, image_width, 3, class_num)
+        #loss_func = weighted_binary_crossentropy(alpha)
+        loss_func = 'binary_crossentropy'
+        #loss_func = K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
+        loss_weights = None
+        metrics=['accuracy']
+        #metrics = [weighted_acc]
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
@@ -153,6 +172,8 @@ if __name__ == "__main__":
     val_generator = datagen.flow(X_test, y_test, batch_size=batch_size)
     monitor = 'val_loss'
     if args.model == "GoogLeNet":
+        model_dir = 'GoogLeNet_PA-100K'
+    elif args.model == "GoogLeNetv2":
         model_dir = 'GoogLeNet_PA-100K'
     checkpointer = ModelCheckpoint(filepath = '../models/imagenet_models/' + model_dir + '/' + save_name+ '_epoch{epoch:02d}_valloss{'+ monitor + ':.2f}.hdf5',
                                    monitor = monitor,
