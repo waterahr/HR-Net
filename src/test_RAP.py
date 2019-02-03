@@ -1,6 +1,6 @@
 """
 python train_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP
-python test_RAP.py -m GoogLeNet -w ../models/imagenet_models/GoogLeNet_RAP/binary51_b2_lr0.0002_lossweight_final_model.h5 -c 51
+python train_RAP.py -m GoogLeNetv2 -w ../models/imagenet_models/GoogLeNet_RAP/binary51_b2_lr0.0002_lossweight_final_model.h5 -c 51
 """
 from network.GoogleLenet import GoogLeNet
 from network.GoogLeNetv2 import GoogLeNet as GoogLeNetv2
@@ -140,6 +140,9 @@ if __name__ == "__main__":
 
     model.load_weights(args.weight, by_name=True)
     predictions_list = model.predict(X_test)
-    predictions = np.array(predictions_list).reshape((class_num, -1)).T
+    if args.model == "GoogLeNet":
+        predictions = np.array(predictions_list)
+    elif args.model == "GoogLeNetv2":
+        predictions = np.array(predictions_list).reshape((class_num, -1)).T
     print("The shape of the predictions_test is: ", predictions.shape)
     np.save("../results/predictions/" + args.model+ '_' + save_name + args.weight[args.weight.rindex('/')+1:-3] + "_predictions_imagenet_test_RAP.npy", predictions)

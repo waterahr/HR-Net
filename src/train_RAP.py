@@ -66,7 +66,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary51_b4_75_allin"
+    save_name = "binary51_balancedloss"
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     args = parse_arg()
@@ -154,12 +154,12 @@ if __name__ == "__main__":
     #googleNet默认输入32*32的图片
     if args.model == "GoogLeNet":
         model = GoogLeNet.build(image_height, image_width, 3, class_num)
-        #loss_func = weighted_binary_crossentropy(alpha)
-        loss_func = 'binary_crossentropy'
+        loss_func = weighted_binary_crossentropy(alpha)
+        #loss_func = 'binary_crossentropy'
         #loss_func = K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
         loss_weights = None
-        metrics=['accuracy']
-        #metrics = [weighted_acc]
+        #metrics=['accuracy']
+        metrics = [weighted_acc]
     elif args.model == "GoogLeNetv2":
         model = GoogLeNetv2.build(image_height, image_width, 3, class_num)
         #loss_func = weighted_binary_crossentropy(alpha)

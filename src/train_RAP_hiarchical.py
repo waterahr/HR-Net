@@ -1,7 +1,7 @@
 """
 python train_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP
 python train_RAP_hiarchical.py -m hiarGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarGoogLeNet_RAP
-python train_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -c 51 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP
+python train_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -c 51 -wd 75 -hg 160 -i 500 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP
 python train_RAP_hiarchical.py -m hiarGoogLeNet -b 64 -g 1 -c 51 -w ../models/imagenet_models/hiarGoogLeNet_RAP
 """
 from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
@@ -25,6 +25,7 @@ import numpy as np
 import pandas as pd
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
+from angular_losses import weighted_binary_crossentropy
 
 
 def multi_generator(generator):
@@ -34,6 +35,9 @@ def multi_generator(generator):
         for i in range(y.shape[1]):
             y_list.append(y[:, i])
         yield x, y_list
+        
+def weighted_acc(y_true, y_pred):
+    return K.mean(K.mean(K.equal(y_true, K.round(y_pred)), axis=-1), axis=-1)
 
 alpha = []
 
@@ -65,7 +69,7 @@ def parse_arg():
 
 
 if __name__ == "__main__":
-    save_name = "binary51_75v2"
+    save_name = "binary51_balancedloss"
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
@@ -131,10 +135,13 @@ if __name__ == "__main__":
     data_y = data_y[:, list(np.hstack((low_level, mid_level, high_level)))]
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
     split = np.load('../results/RAP_partion.npy').item()
-    X_train = data_x[list(split['train'][0][:26614])]
+    X_train = data_x[list(split['train'][0])]#[:26614]
     X_test = data_x[list(split['train'][0][26614:])]
-    y_train = data_y[list(split['train'][0][:26614])]#, len(low_level)+len(mid_level):
+    y_train = data_y[list(split['train'][0])]#[:26614]#, len(low_level)+len(mid_level):
     y_test = data_y[list(split['train'][0][26614:])]#, len(low_level)+len(mid_level):
+    alpha = np.sum(data_y[:33268], axis=0)#(len(data_y,), )
+    alpha /= len(data_y[:33268])
+    print(alpha)
     print("The shape of the X_train is: ", X_train.shape)
     print("The shape of the y_train is: ", y_train.shape)
     print("The shape of the X_test is: ", X_test.shape)
@@ -144,14 +151,18 @@ if __name__ == "__main__":
     #googleNet默认输入32*32的图片
     if args.model == "hiarGoogLeNet":
         model = hiarGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
-        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        #loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
-        metrics=['accuracy']
+        #metrics=['accuracy']
+        metrics = [weighted_acc]
     elif args.model == "hiarBayesGoogLeNet":
         model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
-        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        #loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
-        metrics=['accuracy']
+        #metrics=['accuracy']
+        metrics = [weighted_acc]
     elif args.model == "hiarBayesGoogLeNetv2":
         model = hiarBayesGoogLeNetv2.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
@@ -190,10 +201,11 @@ if __name__ == "__main__":
     """
             , initial_epoch = 50,
     """
-    model.fit_generator(multi_generator(train_generator),
+    ###multi_generator(train_generator),multi_generator(val_generator)
+    model.fit_generator(train_generator,
             steps_per_epoch = int(X_train.shape[0] / (batch_size * gpus_num)),
             epochs = nb_epoch,
-            validation_data = multi_generator(val_generator),
+            validation_data = val_generator,
             validation_steps = int(X_test.shape[0] / (batch_size * gpus_num)),
             callbacks = [checkpointer, csvlog])
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')

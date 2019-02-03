@@ -147,6 +147,9 @@ if __name__ == "__main__":
 
     model.load_weights(args.weight, by_name=True)
     predictions_list = model.predict(X_test)
-    predictions = np.array(predictions_list).reshape((class_num, -1)).T
+    if args.model == "hiarBayesGoogLeNet" or args.model == "hiarGoogLeNet":
+        predictions = np.array(predictions_list)
+    elif args.model == "hiarBayesGoogLeNetv2":
+        predictions = np.array(predictions_list).reshape((class_num, -1)).T
     print("The shape of the predictions_test is: ", predictions.shape)
     np.save("../results/predictions/" + args.model + '_' + save_name + args.weight[args.weight.rindex('/')+1:args.weight.rindex('.')] + "_predictions_imagenet_test_RAP.npy", predictions)
