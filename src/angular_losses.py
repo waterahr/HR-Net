@@ -95,10 +95,16 @@ def weighted_binary_crossentropy(alpha):
         """
         #b_ce = K.sum(-y_pred * K.log(y_true) - (1.0 - y_pred) * K.log(1.0 - y_true), axis=-1)
         ###NaN
+        #"""
         logits = K.log(y_pred) - K.log(1.0 - y_pred)
         b_ce = logits - logits * y_true - K.log(y_pred)
         print(b_ce)#Tensor("loss/dense_2_loss/Sum:0", shape=(?,), dtype=float32)
         weighted_b_ce = logits - logits * y_true - (y_true * alpha + 1 - y_true) * K.log(y_pred)
+        #"""
+        ###exp
+        weighted_b_ce = -alpha * y_true * K.log(y_pred + 1e-10) - alpha * (1.0 - y_true) * K.log(1.0 - y_pred + 1e-10)
+        ###noexp
+        weighted_b_ce = -1 / (2 * alpha) * y_true * K.log(y_pred + 1e-10) - (1.0 - y_true)/ (2 * (1 - alpha))  * K.log(1.0 - y_pred + 1e-10)
 
 
         # Return the mean error

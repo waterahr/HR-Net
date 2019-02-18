@@ -69,10 +69,22 @@ def parse_arg():
 
 
 if __name__ == "__main__":
-    save_name = "binary51_balancedloss"
+    save_name = "binary51"
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    #"""
+    save_name = "binary92_newloss"
+    low_level = [11,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91]#
+    mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
+    high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62]#
+    #"""
+    #"""
+    save_name = "binary51_newhier_newlossnoexp+oldloss100"
+    low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level = [4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    high_level = [0,1,2,3]#,51,52,53,54,55,56,57,58,59,60,61,62
+    #"""
     """
     save_name = "binary3"
     low_level = [11]
@@ -141,7 +153,9 @@ if __name__ == "__main__":
     y_test = data_y[list(split['train'][0][26614:])]#, len(low_level)+len(mid_level):
     alpha = np.sum(data_y[:33268], axis=0)#(len(data_y,), )
     alpha /= len(data_y[:33268])
+    #alpha = np.exp(-alpha)
     print(alpha)
+    print(alpha.shape)
     print("The shape of the X_train is: ", X_train.shape)
     print("The shape of the y_train is: ", y_train.shape)
     print("The shape of the X_test is: ", X_test.shape)
@@ -151,18 +165,18 @@ if __name__ == "__main__":
     #googleNet默认输入32*32的图片
     if args.model == "hiarGoogLeNet":
         model = hiarGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
-        #loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
-        loss_func = weighted_binary_crossentropy(alpha)
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        #loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
-        #metrics=['accuracy']
-        metrics = [weighted_acc]
+        metrics=['accuracy']
+        #metrics = [weighted_acc]
     elif args.model == "hiarBayesGoogLeNet":
         model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
-        #loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
-        loss_func = weighted_binary_crossentropy(alpha)
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        #loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
-        #metrics=['accuracy']
-        metrics = [weighted_acc]
+        metrics=['accuracy']
+        #metrics = [weighted_acc]
     elif args.model == "hiarBayesGoogLeNetv2":
         model = hiarBayesGoogLeNetv2.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)

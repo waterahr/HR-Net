@@ -64,7 +64,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary26_"
+    save_name = "binary26_allforloss_"
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     args = parse_arg()
@@ -191,5 +191,5 @@ if __name__ == "__main__":
             epochs = nb_epoch,
             validation_data = val_generator,
             validation_steps = int(X_test.shape[0] / (batch_size * gpus_num)),
-            callbacks = [checkpointer, csvlog])
+            callbacks = [checkpointer, csvlog], initial_epoch=500)
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')
