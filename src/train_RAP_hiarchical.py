@@ -13,10 +13,12 @@ python train_RAP_hiarchical.py -g 1 -m hiarGoogLeNet -wd 227 -hg 227 -b 128 -c 5
 python train_RAP_hiarchical.py -g 1 -m hiarGoogLeNet_inception -wd 227 -hg 227 -b 128 -c 51 -i 1000
 ls
 python train_RAP_hiarchical.py -m hiarBayesInception_v4 -wd 299 -hg 299 -b 16 -c 51 -i 200 -g 
+python train_RAP_hiarchical.py -m hiarGoogLeNetGAP -b 128 -c 51 -i 200 -g 
 """
-from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
-from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
+#from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
+#from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
 from network.hiarGoogLenet import hiarGoogLeNet
+from network.hiarGoogLenetGAP import hiarGoogLeNetGAP
 from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
@@ -102,7 +104,7 @@ def generate_imgdata_from_file(X_path, y, batch_size, image_height, image_width)
 alpha = []
 
 def parse_arg():
-    models = ['hiarGoogLeNet', 'hiarBayesGoogLeNet', 'hiarBayesGoogLeNet_inception', 'hiarGoogLeNet_inception']
+    models = ['hiarGoogLeNet', 'hiarGoogLeNetGAP', 'hiarBayesGoogLeNet', 'hiarBayesGoogLeNet_inception', 'hiarGoogLeNet_inception']
     parser = argparse.ArgumentParser(description='training of the WPAL...')
     parser.add_argument('-g', '--gpus', type=str, default='',
                         help='The gpu device\'s ID need to be used')
@@ -239,6 +241,14 @@ if __name__ == "__main__":
         loss_weights = None
         metrics=['accuracy']
         metrics = [weighted_acc]
+    elif args.model == "hiarGoogLeNetGAP":
+        model = hiarGoogLeNetGAP.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+        metrics = [weighted_acc]
+        metrics = [mA, 'accuracy']
     elif args.model == "hiarBayesGoogLeNet":
         model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
@@ -246,6 +256,7 @@ if __name__ == "__main__":
         loss_weights = None
         metrics=['accuracy']
         metrics = [weighted_acc]
+        metrics = [mA, 'accuracy']
     elif args.model == "hiarBayesInception_v4":
         model = hiarBayesInception_v4(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
@@ -294,6 +305,8 @@ if __name__ == "__main__":
     monitor = 'val_mA'
     if args.model == "hiarGoogLeNet":
         model_dir = 'hiarGoogLeNet_RAP'
+    elif args.model == "hiarGoogLeNetGAP":
+        model_dir = 'hiarGoogLeNetGAP_RAP'
     elif args.model == "hiarBayesGoogLeNet": 
         model_dir = 'hiarBayesGoogLeNet_RAP'
     elif args.model == "hiarBayesInception_v4":

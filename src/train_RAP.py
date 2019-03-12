@@ -5,9 +5,11 @@ python train_RAP.py -m GoogLeNet -c 51 -b 32 -g 0 -w ../models/imagenet_models/G
 python train_RAP.py -m GoogLeNet -c 51 -b 32 -g 0 -hg 160 -wd 75
 python train_RAP.py -m GoogLeNet -c 51 -b 64 -g 1 -p 
 python train_RAP.py -m Inception_v4 -c 51 -b 32 -wd 299 -hg 299 -i 200 -g 
+python train_RAP.py -m GoogLeNetGAP -c 51 -b 32 -i 200 -g 
 """
 from network.GoogleLenet import GoogLeNet
 from network.GoogLeNetv2 import GoogLeNet as GoogLeNetv2
+from network.GoogLenetGAP import GoogLeNetGAP
 from network.Inception_v4 import Inception_v4
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
@@ -84,7 +86,7 @@ def generate_imgdata_from_file(X_path, y, batch_size, image_height, image_width)
                 Y = []
 
 def parse_arg():
-    models = ['GoogLeNet', 'Inception_v4']
+    models = ['GoogLeNet', 'Inception_v4', 'GoogLeNetGAP']
     parser = argparse.ArgumentParser(description='training of the WPAL...')
     parser.add_argument('-g', '--gpus', type=str, default='',
                         help='The gpu device\'s ID need to be used')
@@ -114,10 +116,10 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary51_balancedloss"
+    args = parse_arg()
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_newlossnoexp"
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
-    args = parse_arg()
     class_num = args.classes
 
 
@@ -154,19 +156,16 @@ if __name__ == "__main__":
     image_width = args.width
     image_height = args.height
     #hiarBayesGoogLeNet
-    if args.model == "GoogLeNet" or args.model == "Inception_v4":
-        filename = r"../results/RAP_labels_pd.csv"
-        #filename = r"../results/myRAP_labels_pd.csv"
-    elif args.model == "GoogLeNetv2":
-        filename = r"../results/RAP_labels_pd.csv"
-        #filename = r"../results/myRAP_labels_pd.csv"
+    filename = r"../results/RAP_labels_pd.csv"
+    #filename = r"../results/myRAP_labels_pd.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     #global alpha
-    data_x = np.zeros((length, image_height, image_width, 3))
+    load = False
+    if load:
+        data_x = np.zeros((length, image_height, image_width, 3))
     data_y = np.zeros((length, class_num))
     data_path = []
-    load = False
     for i in range(length):
         #img = image.load_img(path + m)
         data_path.append(data[i, 0])
@@ -217,6 +216,15 @@ if __name__ == "__main__":
         loss_weights = None
         #metrics=['accuracy']
         metrics = [weighted_acc]
+    elif args.model == "GoogLeNetGAP":
+        model = GoogLeNetGAP.build(image_height, image_width, 3, class_num)
+        loss_func = weighted_binary_crossentropy(alpha)
+        #loss_func = 'binary_crossentropy'
+        #loss_func = K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
+        loss_weights = None
+        #metrics=['accuracy']
+        metrics = [weighted_acc]
+        metrics = [mA]
     elif args.model == "Inception_v4":
         model = Inception_v4(image_height, image_width, 3, class_num)
         loss_func = weighted_binary_crossentropy(alpha)
@@ -268,6 +276,8 @@ if __name__ == "__main__":
         model_dir = 'GoogLeNet_RAP'
     elif args.model == "Inception_v4":
         model_dir = "InceptionV4_RAP"
+    elif args.model == "GoogLeNetGAP":
+        model_dir = "GoogLeNetGAP_RAP"
     elif args.model == "GoogLeNetv2":
         model_dir = 'GoogLeNet_RAP'
         save_name = "binary51_b4_75v2_"
