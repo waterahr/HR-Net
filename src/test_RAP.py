@@ -3,6 +3,7 @@ python train_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/ima
 python train_RAP.py -m GoogLeNetv2 -w ../models/imagenet_models/GoogLeNet_RAP/binary51_b2_lr0.0002_lossweight_final_model.h5 -c 51
 """
 from network.GoogleLenet import GoogLeNet
+from network.Inception_v4 import Inception_v4
 from network.GoogLeNetv2 import GoogLeNet as GoogLeNetv2
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -15,6 +16,8 @@ import argparse
 import json
 import numpy as np
 import pandas as pd
+import re
+import tqdm
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
 
@@ -42,12 +45,9 @@ def parse_arg():
     return args
 
 
-    
-
-
 if __name__ == "__main__":
     #"""
-    save_name = "binary51_75v2_"
+    save_name = "binary51"
     #save_name = "binary3_"
     #part = [2,11,24]
     args = parse_arg()
@@ -87,12 +87,7 @@ if __name__ == "__main__":
     image_width = args.width
     image_height = args.height
     #hiarBayesGoogLeNet
-    if args.model == "GoogLeNet":
-        filename = r"../results/RAP_labels_pd.csv"
-        #filename = r"../results/myRAP_labels_pd.csv"
-    elif args.model == "GoogLeNetv2":
-        filename = r"../results/RAP_labels_pd.csv"
-        #filename = r"../results/myRAP_labels_pd.csv"
+    filename = r"../results/RAP_labels_pd.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     #global alpha
@@ -119,11 +114,19 @@ if __name__ == "__main__":
     
     #googleNet默认输入32*32的图片
     if args.model == "GoogLeNet":
+        model_dir = "GoogLeNet_RAP/"
         model = GoogLeNet.build(None, None, 3, class_num)
         loss_func = 'binary_crossentropy'
         loss_weights = None
         metrics=['accuracy']
+    elif args.model == "Inception_v4":
+        model_dir = "InceptionV4_RAP/"
+        model = Inception_v4(image_height, image_width, 3, class_num)
+        loss_func = 'binary_crossentropy'
+        loss_weights = None
+        metrics=['accuracy']
     elif args.model == "GoogLeNetv2":
+        model_dir = "GoogLeNet_RAP/"
         model = GoogLeNetv2.build(image_height, image_width, 3, class_num)
         #loss_func = weighted_binary_crossentropy(alpha)
         loss_func = 'binary_crossentropy'
@@ -138,11 +141,18 @@ if __name__ == "__main__":
     model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
-    model.load_weights(args.weight, by_name=True)
-    predictions_list = model.predict(X_test)
-    if args.model == "GoogLeNet":
-        predictions = np.array(predictions_list)
-    elif args.model == "GoogLeNetv2":
-        predictions = np.array(predictions_list).reshape((class_num, -1)).T
-    print("The shape of the predictions_test is: ", predictions.shape)
-    np.save("../results/predictions/" + args.model+ '_' + save_name + args.weight[args.weight.rindex('/')+1:-3] + "_predictions_imagenet_test_RAP.npy", predictions)
+    reg = args.weight + "_(e|f)1*"
+    print(reg)
+    weights = [s for s in os.listdir("../models/imagenet_models/" + model_dir) 
+          if re.match(reg, s)]
+    print(weights)
+    for w in tqdm.tqdm(weights):
+        model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
+        predictions_list = model.predict(X_test)  
+        if args.model == "GoogLeNetv2":
+            predictions = np.array(predictions_list).reshape((class_num, -1)).T
+        else:
+            predictions = np.array(predictions_list)
+        print("The shape of the predictions_test is: ", predictions.shape)
+        np.save("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_test_RAP.npy", predictions)
+        print("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_test_RAP.npy")

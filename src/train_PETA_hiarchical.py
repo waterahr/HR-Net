@@ -3,6 +3,7 @@ python train_PETA.py -g 0,1 -c 61 -b 64 -m hiarGoogLeNetSPP
 python train_PETA_hiarchical.py -m hiarGoogLeNet -c 61 -g 1
 python train_PETA_hiarchical.py -m hiarBayesGoogLeNet -c 61 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_PETA/binary61_multi_final_model.h5/inary61_multi_mar_final_model.h5
 python train_PETA_hiarchical.py -m hiarGoogLeNetWAM -c 61 -g 1
+python train_PETA_hiarchical.py -m hiarBayesInception_v4 -c 61 -i 200 -wd 299 -hg 299 -b 32 -g 
 """
 from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
 from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
@@ -11,6 +12,7 @@ from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
 from network.hiarBayesGoogLenet import hiarBayesGoogLeNet
+from network.hiarBayesInception_v4 import hiarBayesInception_v4
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 from keras.utils import multi_gpu_model
@@ -24,8 +26,29 @@ import numpy as np
 import pandas as pd
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
+from angular_losses import weighted_binary_crossentropy
+
+def weighted_acc(y_true, y_pred):
+    return K.mean(K.mean(K.equal(y_true, K.round(y_pred)), axis=-1), axis=-1)
 
 alpha = []
+
+def generate_imgdata_from_file(X_path, y, batch_size, image_height, image_width):
+    while True:
+        cnt = 0
+        X = []
+        Y = []
+        for i in range(len(X_path)):
+            img = image.load_img(X_path[i], target_size=(image_height, image_width, 3))
+            img = image.img_to_array(img)
+            X.append(img)
+            Y.append(y[i])
+            cnt += 1
+            if cnt==batch_size:
+                cnt = 0
+                yield (np.array(X), np.array(Y))
+                X = []
+                Y = []
 
 def parse_arg():
     models = ['hiarGoogLeNetSPP', 'hiarGoogLeNetWAM', 'hiarGoogLeNet', 'hiarBayesGoogLeNet', 'hiarGoogLeNet_high', 'hiarGoogLeNet_mid', 'hiarGoogLeNet_low']
@@ -56,10 +79,16 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary61_gap&dense"
+    save_name = "binary61_newlossnoexp"
     low_level = [27, 32, 50, 56]#, 61, 62, 63, 64
     mid_level = [0, 6, 7, 8, 9, 11, 12, 13, 17, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 57, 58, 59, 60]
     high_level = [1, 2, 3, 4, 5, 10, 14, 15, 16, 18, 19, 31, 34, 40]
+    """
+    save_name = "binary61_cluster"
+    low_level = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 33, 34, 35, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, 54, 55, 56, 57, 59, 60]
+    mid_level = [25, 32, 36, 39, 45]
+    high_level = [0, 8, 18, 19, 50, 51, 52, 53, 58]
+    """
     ###rl
     """
     save_name = "rl_binary61"
@@ -122,20 +151,7 @@ if __name__ == "__main__":
     image_width = args.width
     image_height = args.height
     #hiarBayesGoogLeNet
-    if args.model == "hiarGoogLeNetSPP":
-        filename = r"../results/PETA.csv"
-    elif args.model == "hiarGoogLeNetWAM":
-        filename = r"../results/PETA.csv"
-    elif args.model == "hiarGoogLeNet":
-        filename = r"../results/PETA.csv"
-    elif args.model == "hiarGoogLeNet_high":
-        filename = r"../results/PETA.csv"
-    elif args.model == "hiarGoogLeNet_mid":
-        filename = r"../results/PETA.csv"
-    elif args.model == "hiarGoogLeNet_low":
-        filename = r"../results/PETA.csv"
-    elif args.model == "hiarBayesGoogLeNet":
-        filename = r"../results/PETA.csv"
+    filename = r"../results/PETA.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     #global alpha
@@ -153,13 +169,18 @@ if __name__ == "__main__":
         data_y_hig[i] = np.array(data[i, high_level], dtype="float32")
     data_y = np.hstack((data_y_low, data_y_mid, data_y_hig))
     """
+    data_path = []
     data_y = np.zeros((length, class_num))
+    load = False
     for i in range(length):
         #img = image.load_img(path + m)
-        img = image.load_img(data[i, 0], target_size=(image_width, image_height, 3))
-        data_x[i] = image.img_to_array(img)
+        data_path.append(data[i, 0])
+        if load:
+            img = image.load_img(data[i, 0], target_size=(image_width, image_height, 3))
+            data_x[i] = image.img_to_array(img)
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_y = data_y[:, list(np.hstack((low_level, mid_level, high_level)))]
+    data_path = np.array(data_path)
     """
     for i in range(class_num):
         alpha[i] += list(data_y[:, i]).count(1.0)
@@ -167,10 +188,15 @@ if __name__ == "__main__":
     print("The positive ratio of each attribute is:\n", alpha)
     """
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    X_train = data_x[:9500]
-    X_test = data_x[9500:11400]
+    if load:
+        X_train = data_x[:9500]
+        X_test = data_x[9500:11400]
+    X_train_path = data_path[:9500]
+    X_test_path = data_path[9500:11400]
     y_train = data_y[:9500]#, len(low_level)+len(mid_level):
     y_test = data_y[9500:11400]#, len(low_level)+len(mid_level):
+    alpha = np.sum(y_train, axis=0)#(len(data_y[0]), )
+    alpha /= len(y_train)
     if args.model == "hiarGoogLeNet_high":
         y_train = y_train[:, len(low_level)+len(mid_level):] 
         y_test = y_test[:, len(low_level)+len(mid_level):]
@@ -180,10 +206,13 @@ if __name__ == "__main__":
     elif args.model == "hiarGoogLeNet_low":
         y_train = y_train[:, :len(low_level)] 
         y_test = y_test[:, :len(low_level)]
-    print("The shape of the X_train is: ", X_train.shape)
+    if load:
+        print("The shape of the X_train is: ", X_train.shape)
     print("The shape of the y_train is: ", y_train.shape)
-    print("The shape of the X_test is: ", X_test.shape)
+    if load:
+        print("The shape of the X_test is: ", X_test.shape)
     print("The shape of the y_test is: ", y_test.shape)
+    print(alpha)
     #np.save("../results/" + args.model + '_' + save_name + "_X_test.npy", X_test)
     #np.save("../results/" + args.model + '_' + save_name + "_y_test.npy", y_test)
     
@@ -224,6 +253,13 @@ if __name__ == "__main__":
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+    elif args.model == "hiarBayesInception_v4":
+        model = hiarBayesInception_v4(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+        metrics = [weighted_acc]
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
@@ -234,8 +270,14 @@ if __name__ == "__main__":
 
     nb_epoch = args.iteration
     batch_size = args.batch
-    train_generator = datagen.flow(X_train, y_train, batch_size=batch_size)
-    val_generator = datagen.flow(X_test, y_test, batch_size=batch_size)
+    if load:
+        train_generator = datagen.flow(X_train, y_train, batch_size=batch_size)
+    else:
+        train_generator = generate_imgdata_from_file(X_train_path, y_train, batch_size, image_height, image_width)
+    if load:
+        val_generator = datagen.flow(X_test, y_test, batch_size=batch_size)
+    else:
+        val_generator = generate_imgdata_from_file(X_test_path, y_test, batch_size, image_height, image_width)
     monitor = 'val_loss'
     if args.model == "hiarGoogLeNetSPP":
         model_dir = 'hiarGoogLeNetSPP_PETA'
@@ -246,6 +288,8 @@ if __name__ == "__main__":
     elif args.model == "hiarBayesGoogLeNet":
         model_dir = 'hiarBayesGoogLeNet_PETA'
         #save_name = 'rl_binary61_multi'#_loss2_ifelse
+    elif args.model == "hiarBayesInception_v4":
+        model_dir = "hiarBayesInceptionV4_PETA"
     elif args.model == "hiarGoogLeNet_high":
         model_dir = 'hiarGoogLeNet_PETA'
         save_name = 'binary61_high'
@@ -270,10 +314,10 @@ if __name__ == "__main__":
             initial_epoch = 100,
     """
     model.fit_generator(train_generator,
-            steps_per_epoch = int(X_train.shape[0] / (batch_size * gpus_num)),
+            steps_per_epoch = int(X_train_path.shape[0] / (batch_size * gpus_num)),
             epochs = nb_epoch,
             validation_data = val_generator,
-            validation_steps = int(X_test.shape[0] / (batch_size * gpus_num)),
+            validation_steps = int(X_test_path.shape[0] / (batch_size * gpus_num)),
             callbacks = [checkpointer, csvlog])
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')
         #model_pred.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])

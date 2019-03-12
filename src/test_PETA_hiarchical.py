@@ -11,6 +11,7 @@ from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
 from network.hiarBayesGoogLenet import hiarBayesGoogLeNet
+from network.hiarBayesInception_v4 import hiarBayesInception_v4
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
 from keras.utils import multi_gpu_model
@@ -22,6 +23,8 @@ import argparse
 import json
 import numpy as np
 import pandas as pd
+import re
+import tqdm
 from keras import backend as K
 from angular_losses import weighted_categorical_crossentropy, coarse_to_fine_categorical_crossentropy_lowerbody
 
@@ -54,10 +57,16 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary61_gap&dense"
+    save_name = "binary61"
     low_level = [27, 32, 50, 56]#, 61, 62, 63, 64
     mid_level = [0, 6, 7, 8, 9, 11, 12, 13, 17, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 57, 58, 59, 60]
     high_level = [1, 2, 3, 4, 5, 10, 14, 15, 16, 18, 19, 31, 34, 40]
+    """
+    save_name = "binary61_cluster"
+    low_level = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 33, 34, 35, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, 54, 55, 56, 57, 59, 60]
+    mid_level = [25, 32, 36, 39, 45]
+    high_level = [0, 8, 18, 19, 50, 51, 52, 53, 58]
+    """
     """
     save_name = "binary61_rl"
     low_level = [2, 4, 6, 8, 11, 13, 17, 19, 23, 24, 25, 32, 33, 34, 35, 37, 43]
@@ -117,7 +126,7 @@ if __name__ == "__main__":
     length = len(data)
     data_x = np.zeros((length, image_width, image_height, 3))
     data_y = np.zeros((length, class_num))
-    for i in range(length):
+    for i in range(11400, length):
         #img = image.load_img(path + m)
         img = image.load_img(data[i, 0], target_size=(image_width, image_height, 3))
         data_x[i] = image.img_to_array(img)
@@ -137,39 +146,52 @@ if __name__ == "__main__":
     
     #googleNet默认输入32*32的图片
     if args.model == "hiarGoogLeNetSPP":
+        model_dir = "hiarGoogLeNetSPP_PETA/"
         model = hiarGoogLeNetSPP.build(None, None, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarGoogLeNetWAM":
+        model_dir = "hiarGoogLeNetWAM_PETA/"
         model = hiarGoogLeNetWAM.build(None, None, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarGoogLeNet":
+        model_dir = "hiarGoogLeNet_PETA/"
         model = hiarGoogLeNet.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarGoogLeNet_high":
+        model_dir = "hiarGoogLeNet_PETA/"
         model = hiarGoogLeNet_high.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarGoogLeNet_mid":
+        model_dir = "hiarGoogLeNet_PETA/"
         model = hiarGoogLeNet_mid.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarGoogLeNet_low":
+        model_dir = "hiarGoogLeNet_PETA/"
         model = hiarGoogLeNet_low.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarBayesGoogLeNet":
+        model_dir = "hiarBayesGoogLeNet_PETA/"
         #save_name = "binary61v2_multi"
         model = hiarBayesGoogLeNet.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarBayesInception_v4":
+        model_dir = "hiarBayesInceptionV4_PETA/"
+        model = hiarBayesInception_v4(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     gpus_num = len(args.gpus.split(','))
@@ -178,8 +200,16 @@ if __name__ == "__main__":
     #model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
     model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
     model.summary()
-    model.load_weights(args.weight, by_name=True)
     
-    predictions = model.predict(X_test)
-    print("The shape of the predictions_test is: ", predictions.shape)
-    np.save("../results/predictions/" + args.model + '_' + save_name + "_" + args.weight[args.weight.rindex('/')+1:args.weight.rindex('.')] + "_predictions_imagenet_test7600.npy", predictions)
+    reg = args.weight + "_(e|f)1*"
+    print(reg)
+    weights = [s for s in os.listdir("../models/imagenet_models/" + model_dir) 
+          if re.match(reg, s)]
+    print(weights)
+    for w in tqdm.tqdm(weights):
+        model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
+
+        predictions = model.predict(X_test)
+        print("The shape of the predictions_test is: ", predictions.shape)
+        np.save("../results/predictions/" + args.model + '_' + save_name + "_" + w + "_predictions_imagenet_test7600.npy", predictions)
+        print("../results/predictions/" + args.model + '_' + save_name + "_" + w + "_predictions_imagenet_test7600.npy")

@@ -145,5 +145,9 @@ class hiarGoogLeNetSPP:
 
 if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = ""
-    model = hiarGoogLeNetSPP.build(None, None, 3, [10, 20, 30])#因为googleNet默认输入32*32的图片
-    plot_model(model, to_file="../../results/hiarGoogleLenet-SPP.png", show_shapes=True)
+    low_level = [27, 32, 50, 56]#, 61, 62, 63, 64
+    mid_level = [0, 6, 7, 8, 9, 11, 12, 13, 17, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 57, 58, 59, 60]
+    high_level = [1, 2, 3, 4, 5, 10, 14, 15, 16, 18, 19, 31, 34, 40]
+    model = hiarGoogLeNetSPP.build(75, 160, 3, [len(low_level), len(mid_level), len(high_level)], weights="none")#因为googleNet默认输入32*32的图片
+    model.summary()
+    plot_model(model, to_file="../results/hiarGoogleLenet-SPP.png", show_shapes=True)

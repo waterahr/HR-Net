@@ -1,12 +1,8 @@
 """
-python train_PA-100K.py -m GoogLeNet -b 64 -g 1 -w ../models/imagenet_models/GoogLeNet_PA-100K
-python train_PA-100K.py -m GoogLeNet -c 26 -b 64 -g 1 -w ../models/imagenet_models/GoogLeNet_PA-100K
-python train_PA-100K.py -m GoogLeNet -c 26 -b 32 -g 0 -w ../models/imagenet_models/GoogLeNet_PA-100K
-python train_PA-100K.py -m GoogLeNet -c 26 -b 32 -g 0 -hg 160 -wd 75
-python train_PA-100K.py -m GoogLeNet -c 26 -b 64 -g 1
+python train_PA-100K.py -m GoogLeNet -c 26 -b 32 -g 1 -hg 160 -wd 75
 """
 from network.GoogleLenet import GoogLeNet
-from network.GoogleLenetv2 import GoogLeNet as GoogLeNetv2
+from network.GoogLeNetv2 import GoogLeNet as GoogLeNetv2
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -21,8 +17,6 @@ import numpy as np
 import pandas as pd
 from keras import backend as K
 from angular_losses import weighted_binary_crossentropy
-
-alpha = []
 
 def weighted_acc(y_true, y_pred):
     return K.mean(K.mean(K.equal(y_true, K.round(y_pred)), axis=-1), axis=-1)
@@ -52,7 +46,7 @@ def parse_arg():
                         help='The weights file of the pre-training')
     parser.add_argument('-m', '--model', type=str, default='',
                         help='The model including: '+str(models))
-    parser.add_argument('-i', '--iteration', type=int, default=50,
+    parser.add_argument('-i', '--iteration', type=int, default=100,
                         help='The model iterations')
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
@@ -64,7 +58,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary26_allforloss_"
+    save_name = "binary26"
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     args = parse_arg()
@@ -121,13 +115,6 @@ if __name__ == "__main__":
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     #data_y = data_y[:, part]
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    """
-    split = np.load('../results/PA-100K_partion.npy').item()
-    X_train = data_x[list(split['train'][0][:26614])]
-    X_test = data_x[list(split['train'][0][26614:])]
-    y_train = data_y[list(split['train'][0][:26614])]#, len(low_level)+len(mid_level):
-    y_test = data_y[list(split['train'][0][26614:])]#, len(low_level)+len(mid_level):
-    """
     X_train = data_x[:80000]
     X_test = data_x[80000:90000]
     y_train = data_y[:80000]#, len(low_level)+len(mid_level):
@@ -136,26 +123,27 @@ if __name__ == "__main__":
     print("The shape of the y_train is: ", y_train.shape)
     print("The shape of the X_test is: ", X_test.shape)
     print("The shape of the y_test is: ", y_test.shape)
-    #alpha = np.ones((1, class_num))
+    alpha = np.sum(data_y[:90000], axis=0)#(len(data_y,), )
+    alpha /= len(data_y[:90000])
+    print(alpha)
     
     
     #googleNet默认输入32*32的图片
     if args.model == "GoogLeNet":
         model = GoogLeNet.build(None, None, 3, class_num)
-        #loss_func = weighted_binary_crossentropy(alpha)
-        loss_func = 'binary_crossentropy'
-        #loss_func = K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+        metrics = [weighted_acc]
         #metrics = [weighted_acc]
     elif args.model == "GoogLeNetv2":
         model = GoogLeNetv2.build(image_height, image_width, 3, class_num)
-        #loss_func = weighted_binary_crossentropy(alpha)
-        loss_func = 'binary_crossentropy'
-        #loss_func = K.mean(K.binary_crossentropy(y_true, y_pred), axis=-1)
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
-        #metrics = [weighted_acc]
+        metrics = [weighted_acc]
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
@@ -191,5 +179,5 @@ if __name__ == "__main__":
             epochs = nb_epoch,
             validation_data = val_generator,
             validation_steps = int(X_test.shape[0] / (batch_size * gpus_num)),
-            callbacks = [checkpointer, csvlog], initial_epoch=500)
+            callbacks = [checkpointer, csvlog])#, initial_epoch=500
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')

@@ -1,8 +1,6 @@
 """
-python train_PA-100K_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_PA-100K
-python train_PA-100K_hiarchical.py -m hiarGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarGoogLeNet_PA-100K
-python train_PA-100K_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -c 26 -w ../models/imagenet_models/hiarBayesGoogLeNet_PA-100K
-python train_PA-100K_hiarchical.py -m hiarGoogLeNet -b 64 -g 1 -c 26 -w ../models/imagenet_models/hiarGoogLeNet_PA-100K
+python train_PA-100K_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 0 -c 26
+python train_PA-100K_hiarchical.py -m hiarGoogLeNet -b 64 -g 0 -c 26
 """
 from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
 from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
@@ -25,6 +23,7 @@ import numpy as np
 import pandas as pd
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
+from angular_losses import weighted_binary_crossentropy
 
 def multi_generator(generator):
     while True:
@@ -34,7 +33,8 @@ def multi_generator(generator):
             y_list.append(y[:, i])
         yield x, y_list
 
-alpha = []
+def weighted_acc(y_true, y_pred):
+    return K.mean(K.mean(K.equal(y_true, K.round(y_pred)), axis=-1), axis=-1)
 
 def parse_arg():
     models = ['hiarGoogLeNet', 'hiarBayesGoogLeNet']
@@ -53,7 +53,7 @@ def parse_arg():
                         help='The weights file of the pre-training')
     parser.add_argument('-m', '--model', type=str, default='',
                         help='The model including: '+str(models))
-    parser.add_argument('-i', '--iteration', type=int, default=50,
+    parser.add_argument('-i', '--iteration', type=int, default=100,
                         help='The model iterations')
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpus
@@ -64,7 +64,7 @@ def parse_arg():
 
 
 if __name__ == "__main__":
-    save_name = "binary26_"
+    save_name = "binary26"
     low_level = [15,16,17,18,19,20]
     mid_level = [7,8,9,10,11,12,13,14,21,22,23,24,25]
     high_level = [0,1,2,3,4,5,6]
@@ -137,19 +137,26 @@ if __name__ == "__main__":
     print("The shape of the y_train is: ", y_train.shape)
     print("The shape of the X_test is: ", X_test.shape)
     print("The shape of the y_test is: ", y_test.shape)
+    alpha = np.sum(data_y[:90000], axis=0)#(len(data_y,), )
+    alpha /= len(data_y[:90000])
+    print(alpha)
     
     
     #googleNet默认输入32*32的图片
     if args.model == "hiarGoogLeNet":
         model = hiarGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+        metrics = [weighted_acc]
     elif args.model == "hiarBayesGoogLeNet":
         model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
-        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+        metrics = [weighted_acc]
     elif args.model == "hiarBayesGoogLeNetv2":
         model = hiarBayesGoogLeNetv2.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
@@ -187,10 +194,10 @@ if __name__ == "__main__":
             , initial_epoch = 50,
     """
     #multi_generator(train_generator),multi_generator(val_generator)
-    model.fit_generator(multi_generator(train_generator),
+    model.fit_generator(train_generator,
             steps_per_epoch = int(X_train.shape[0] / (batch_size * gpus_num)),
             epochs = nb_epoch,
-            validation_data = multi_generator(val_generator),
+            validation_data = val_generator,
             validation_steps = int(X_test.shape[0] / (batch_size * gpus_num)),
             callbacks = [checkpointer, csvlog])
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')

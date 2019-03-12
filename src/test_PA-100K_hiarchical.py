@@ -24,8 +24,6 @@ import pandas as pd
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
 
-alpha = []
-
 def parse_arg():
     models = ['hiarGoogLeNet', 'hiarBayesGoogLeNet']
     parser = argparse.ArgumentParser(description='training of the WPAL...')
@@ -53,7 +51,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary26_75_"
+    save_name = "binary26"
     low_level = [15,16,17,18,19,20]
     mid_level = [7,8,9,10,11,12,13,14,21,22,23,24,25]
     high_level = [0,1,2,3,4,5,6]
@@ -110,8 +108,6 @@ if __name__ == "__main__":
         data_x[i] = image.img_to_array(img)
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_y = data_y[:, list(np.hstack((low_level, mid_level, high_level)))]
-    #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    #split = np.load('../results/PA-100K_partion.npy').item()
     X_test = data_x[90000:]
     y_test = data_y[90000:]
     print("The shape of the X_test is: ", X_test.shape)
@@ -136,9 +132,9 @@ if __name__ == "__main__":
     model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
-
     model.load_weights(args.weight, by_name=True)
     
     predictions = model.predict(X_test)
     print("The shape of the predictions_test is: ", predictions.shape)
     np.save("../results/predictions/" + args.model + '_' + save_name + args.weight[args.weight.rindex('/')+1:args.weight.rindex('.')] + "_predictions_imagenet_test_PA-100K.npy", predictions)
+    print("../results/predictions/" + args.model + '_' + save_name + args.weight[args.weight.rindex('/')+1:args.weight.rindex('.')] + "_predictions_imagenet_test_PA-100K.npy")

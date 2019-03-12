@@ -1,5 +1,5 @@
 """
-python train_PA-100K_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_PA-100K
+python train_PA-100K_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 0 -w ../models/imagenet_models/hiarBayesGoogLeNet_PA-100K
 python test_PA-100K.py -m GoogLeNet -w ../models/imagenet_models/GoogLeNet_PA-100K/binary51_b2_lr0.0002_lossweight_final_model.h5 -c 51
 """
 from network.GoogleLenet import GoogLeNet
@@ -16,8 +16,6 @@ import numpy as np
 import pandas as pd
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
-
-alpha = []
 
 def parse_arg():
     models = ['GoogLeNet']
@@ -46,9 +44,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary26_"
-    #save_name = "binary3_"
-    #part = [2,11,24]
+    save_name = "binary26"
     args = parse_arg()
     class_num = args.classes
 
@@ -99,14 +95,6 @@ if __name__ == "__main__":
         img = image.load_img(data[i, 0], target_size=(image_height, image_width, 3))
         data_x[i] = image.img_to_array(img)
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
-    #data_y = data_y[:, part]
-    #class_num = 3
-    #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    """
-    split = np.load('../results/PA-100K_partion.npy').item()
-    X_test = data_x[list(split['test'][0])]
-    y_test = data_y[list(split['test'][0])]
-    """
     X_test = data_x[90000:]
     y_test = data_y[90000:]
     print("The shape of the X_test is: ", X_test.shape)
@@ -126,8 +114,9 @@ if __name__ == "__main__":
     model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
-
     model.load_weights(args.weight, by_name=True)
+    
     predictions = model.predict(X_test)
     print("The shape of the predictions_test is: ", predictions.shape)
     np.save("../results/predictions/" + args.model+ '_' + save_name + args.weight[args.weight.rindex('/')+1:-3] + "_predictions_imagenet_test_PA-100K.npy", predictions)
+    print("../results/predictions/" + args.model+ '_' + save_name + args.weight[args.weight.rindex('/')+1:-3] + "_predictions_imagenet_test_PA-100K.npy")
