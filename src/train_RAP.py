@@ -224,7 +224,7 @@ if __name__ == "__main__":
         loss_weights = None
         #metrics=['accuracy']
         metrics = [weighted_acc]
-        metrics = [mA]
+        metrics = [mA, 'accuracy']
     elif args.model == "Inception_v4":
         model = Inception_v4(image_height, image_width, 3, class_num)
         loss_func = weighted_binary_crossentropy(alpha)

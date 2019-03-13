@@ -137,7 +137,7 @@ if __name__ == "__main__":
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     #global alpha
-    load = False
+    load = True
     if load:
         data_x = np.zeros((length, image_height, image_width, 3))
     data_y = np.zeros((length, class_num))
@@ -222,7 +222,9 @@ if __name__ == "__main__":
         test_generator = generate_imgdata_from_file(X_test_path, y_test, batch_size, image_height, image_width)
     for w in tqdm.tqdm(weights):
         model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
-        predictions_list = model.predict_generator(test_generator, steps=y_test.shape[0]/batch_size)
+        #test_generator.reset()
+        #predictions_list = model.predict_generator(test_generator, steps=y_test.shape[0]/batch_size)
+        predictions_list = model.predict(X_test)
         if args.model == "hiarBayesGoogLeNetv2":
             predictions = np.array(predictions_list).reshape((class_num, -1)).T
         else:
