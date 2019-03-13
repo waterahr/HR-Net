@@ -3,9 +3,10 @@ python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imag
 python test_RAP_hiarchical.py -m hiarGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/GoogLeNet_RAP
 python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP/binary3_epoch50_valloss0.40.hdf5
 """
-from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
-from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
+#from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
+#from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
 from network.hiarGoogLenet import hiarGoogLeNet
+from network.hiarGoogLenetGAP import hiarGoogLeNetGAP
 from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
@@ -33,7 +34,7 @@ import re
 alpha = []
 
 def parse_arg():
-    models = ['hiarGoogLeNet', 'hiarBayesGoogLeNet', 'hiarBayesGoogLeNet_inception']
+    models = ['hiarGoogLeNet', 'hiarGoogLeNetGAP', 'hiarBayesGoogLeNet', 'hiarBayesGoogLeNet_inception', 'hiarGoogLeNet_inception']
     parser = argparse.ArgumentParser(description='training of the WPAL...')
     parser.add_argument('-g', '--gpus', type=str, default='',
                         help='The gpu device\'s ID need to be used')
@@ -72,11 +73,15 @@ if __name__ == "__main__":
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62]#
     #"""
-    save_name = "binary51_newhier"
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_newhier_newlossnoexp_split" + str(args.split)
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
     high_level = [0,1,2,3]#,51,52,53,54,55,56,57,58,59,60,61,62
     #"""
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_beforreduction_oldhier_newlossnoexp_split" + str(args.split)
+    low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
+    high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
     class_num = args.classes
 
 
@@ -167,6 +172,12 @@ if __name__ == "__main__":
         model_dir = "hiarBayesInceptionV4_RAP/"
         model = hiarBayesInception_v4(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarGoogLeNetGAP":
+        model_dir = 'hiarGoogLeNetGAP_RAP'
+        model = hiarGoogLeNetGAP.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     gpus_num = len(args.gpus.split(','))

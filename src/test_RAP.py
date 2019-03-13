@@ -3,6 +3,7 @@ python train_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/ima
 python train_RAP.py -m GoogLeNetv2 -w ../models/imagenet_models/GoogLeNet_RAP/binary51_b2_lr0.0002_lossweight_final_model.h5 -c 51
 """
 from network.GoogleLenet import GoogLeNet
+from network.GoogLenetGAP import GoogLeNetGAP
 from network.Inception_v4 import Inception_v4
 from network.GoogLeNetv2 import GoogLeNet as GoogLeNetv2
 from keras.preprocessing.image import ImageDataGenerator
@@ -24,7 +25,7 @@ from angular_losses import bayes_binary_crossentropy
 alpha = []
 
 def parse_arg():
-    models = ['GoogLeNet']
+    models = ['GoogLeNet', 'Inception_v4', 'GoogLeNetGAP']
     parser = argparse.ArgumentParser(description='training of the WPAL...')
     parser.add_argument('-g', '--gpus', type=str, default='',
                         help='The gpu device\'s ID need to be used')
@@ -116,6 +117,12 @@ if __name__ == "__main__":
     if args.model == "GoogLeNet":
         model_dir = "GoogLeNet_RAP/"
         model = GoogLeNet.build(None, None, 3, class_num)
+        loss_func = 'binary_crossentropy'
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "GoogLeNetGAP":
+        model_dir = "GoogLeNetGAP_RAP"
+        model = GoogLeNetGAP.build(image_height, image_width, 3, class_num)
         loss_func = 'binary_crossentropy'
         loss_weights = None
         metrics=['accuracy']
