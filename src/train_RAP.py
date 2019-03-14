@@ -117,7 +117,7 @@ def parse_arg():
 if __name__ == "__main__":
     #"""
     args = parse_arg()
-    save_name = str(args.height) + "x" + str(args.width) + "binary51_newlossnoexp"
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_newlossnoexp_iter" + str(args.iteration) 
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     class_num = args.classes
