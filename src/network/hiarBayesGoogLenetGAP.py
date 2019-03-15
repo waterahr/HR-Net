@@ -112,7 +112,13 @@ class hiarBayesGoogLeNetGAP:
         x = hiarBayesGoogLeNetGAP.Inception(x, [384,192,384,48,128,128], name="inception_5b")#1024
         gap_hig = Conv2D(1024, (3, 3), padding='same', activation='relu', name='conv3_e')(x)
         gap_hig = GlobalAveragePooling2D()(gap_hig)
-        #fea_low = concatenate([gap_low, gap_mid], axis=1)
+        ### v1
+        gap_low = Dense(512, activation='relu')(gap_low)
+        gap_mid = Dense(512, activation='relu')(gap_mid)
+        gap_hig = Dense(1024, activation='relu')(gap_hig)
+        fea_low = concatenate([gap_low, gap_mid], axis=1)
+        fea_mid = concatenate([gap_mid, gap_hig], axis=1)
+        fea_hig = concatenate([gap_low, gap_mid, gap_hig], axis=1)
         """
         ### v2
         gap_low = Dense(512, activation='relu')(gap_low)
@@ -122,7 +128,7 @@ class hiarBayesGoogLeNetGAP:
         fea_mid = concatenate([gap_mid, gap_hig], axis=1)
         fea_hig = concatenate([gap_low, gap_mid, gap_hig], axis=1)
         #"""
-        #"""
+        """
         ### v3
         fea_low = concatenate([gap_low, gap_hig], axis=-1)
         fea_mid = concatenate([gap_mid, gap_hig], axis=-1)
