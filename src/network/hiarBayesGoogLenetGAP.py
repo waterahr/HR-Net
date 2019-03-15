@@ -97,13 +97,11 @@ class hiarBayesGoogLeNetGAP:
         x = hiarBayesGoogLeNetGAP.Inception(x, [192,96,208,16,48,64], name="inception_4a")#512
         gap_low = Conv2D(512, (3, 3), padding='same', activation='relu', name='conv1_e')(x)
         gap_low = GlobalAveragePooling2D()(gap_low)
-        gap_low = Dense(512, activation='relu')(gap_low)
         x = hiarBayesGoogLeNetGAP.Inception(x, [160,112,224,24,64,64], name="inception_4b")
         x = hiarBayesGoogLeNetGAP.Inception(x, [128,128,256,24,64,64], name="inception_4c")
         x = hiarBayesGoogLeNetGAP.Inception(x, [112,144,288,32,64,64], name="inception_4d")#528
         gap_mid = Conv2D(512, (3, 3), padding='same', activation='relu', name='conv2_e')(x)
         gap_mid = GlobalAveragePooling2D()(gap_mid)
-        gap_mid = Dense(512, activation='relu')(gap_mid)	
         x = hiarBayesGoogLeNetGAP.Inception(x, [256,160,320,32,128,128], name="inception_4e")#832
         x = MaxPooling2D(pool_size=(3,3), strides=(2,2), padding='same')(x)
         """
@@ -114,10 +112,25 @@ class hiarBayesGoogLeNetGAP:
         x = hiarBayesGoogLeNetGAP.Inception(x, [384,192,384,48,128,128], name="inception_5b")#1024
         gap_hig = Conv2D(1024, (3, 3), padding='same', activation='relu', name='conv3_e')(x)
         gap_hig = GlobalAveragePooling2D()(gap_hig)
+        #fea_low = concatenate([gap_low, gap_mid], axis=1)
+        """
+        ### v2
+        gap_low = Dense(512, activation='relu')(gap_low)
+        gap_mid = Dense(512, activation='relu')(gap_mid)
         gap_hig = Dense(1024, activation='relu')(gap_hig)
-        fea_low = concatenate([gap_low, gap_mid], axis=1)
+        fea_low = concatenate([gap_low, gap_hig], axis=1)
         fea_mid = concatenate([gap_mid, gap_hig], axis=1)
         fea_hig = concatenate([gap_low, gap_mid, gap_hig], axis=1)
+        #"""
+        #"""
+        ### v3
+        fea_low = concatenate([gap_low, gap_hig], axis=-1)
+        fea_mid = concatenate([gap_mid, gap_hig], axis=-1)
+        fea_hig = concatenate([gap_low, gap_mid, gap_hig], axis=-1)
+        fea_low = Dense(1024, activation='relu')(fea_low)
+        fea_mid = Dense(1024, activation='relu')(fea_mid)
+        fea_hig = Dense(2048, activation='relu')(fea_hig)
+        #"""
         predictions_low = Dense(classes[0], activation="sigmoid", name="low")(fea_low)
         predictions_mid = Dense(classes[1], activation="sigmoid", name="middle")(fea_mid)
         predictions_hig = Dense(classes[2], activation="sigmoid", name="high")(fea_hig)

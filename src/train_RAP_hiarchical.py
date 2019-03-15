@@ -75,6 +75,7 @@ def mA(y_true, y_pred):
         res += TP/P + TN/N
     return res / (2*L)
     """
+    y_pred = K.cast(y_pred >= 0.5, dtype='float32')
     #print(K.int_shape(y_true))
     P = K.sum(y_true, axis=-1) + K.epsilon()
     #print("P", P)
@@ -136,7 +137,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     args = parse_arg()
-    save_name = str(args.height) + "x" + str(args.width) + "binary51_beforreduction_oldhier_newlossnoexp_split" + str(args.split) + "_iter" + str(args.iteration) 
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_v3_oldhier_newlossnoexp_split" + str(args.split) + "_iter" + str(args.iteration) 
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
