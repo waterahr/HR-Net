@@ -7,6 +7,7 @@ python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imag
 #from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
 from network.hiarGoogLenet import hiarGoogLeNet
 from network.hiarGoogLenetGAP import hiarGoogLeNetGAP
+from network.hiarBayesGoogLenetGAP import hiarBayesGoogLeNetGAP
 from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
@@ -97,6 +98,7 @@ if __name__ == "__main__":
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    #"""
     class_num = args.classes
 
 
@@ -200,6 +202,12 @@ if __name__ == "__main__":
     elif args.model == "hiarGoogLeNetGAP":
         model_dir = 'hiarGoogLeNetGAP_RAP/'
         model = hiarGoogLeNetGAP.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNetGAP":
+        model_dir = 'hiarBayesGoogLeNetGAP_RAP/'
+        model = hiarBayesGoogLeNetGAP.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
