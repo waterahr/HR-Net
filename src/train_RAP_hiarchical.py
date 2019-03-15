@@ -35,12 +35,14 @@ from keras.preprocessing import image
 from keras.utils import multi_gpu_model
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping, TensorBoard, CSVLogger
+from keras.optimizers import SGD
 import sys
 import os
 import argparse
 import json
 import numpy as np
 import pandas as pd
+import math
 from keras import backend as K
 from angular_losses import bayes_binary_crossentropy
 from angular_losses import weighted_binary_crossentropy
@@ -137,7 +139,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     args = parse_arg()
-    save_name = str(args.height) + "x" + str(args.width) + "binary51_v3_oldhier_newlossnoexp_split" + str(args.split) + "_iter" + str(args.iteration) 
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_v2_sgd_oldhier_newlossnoexp_split" + str(args.split) + "_iter" + str(args.iteration) 
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
@@ -299,7 +301,9 @@ if __name__ == "__main__":
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
     #model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
-    model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
+    #model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
+    opt_sgd = SGD(lr=0.001, momentum=0.9, decay=0.0005, nesterov=False)
+    model.compile(loss=loss_func, optimizer=opt_sgd, loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
 
@@ -338,6 +342,13 @@ if __name__ == "__main__":
                                    mode='max', 
                                    period=1)
     csvlog = CSVLogger('../models/imagenet_models/' + model_dir + '/' + save_name+'_'+str(args.iteration)+'iter'+'_log.csv', append=True)#
+    def step_decay(epoch):
+        initial_lrate = 0.001
+        gamma = 0.75
+        step_size = 20000
+        lrate = initial_lrate * math.pow(gamma, math.floor((1+epoch) / step_size))
+        return lrate
+    lrate = LearningRateScheduler(step_decay)
     if args.weight != '':
         model.load_weights(args.weight, by_name=True)
     print(train_generator)
@@ -350,5 +361,5 @@ if __name__ == "__main__":
             epochs = nb_epoch,
             validation_data = val_generator,
             validation_steps = int(X_test_path.shape[0] / (batch_size * gpus_num)),
-            callbacks = [checkpointer, csvlog], workers = 32)#, initial_epoch = 200
+            callbacks = [checkpointer, csvlog, lrate], workers = 32)#, initial_epoch = 200
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final'+str(args.iteration)+'iter_model.h5')
