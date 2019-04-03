@@ -17,12 +17,14 @@ from keras.preprocessing import image
 from keras.utils import multi_gpu_model
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping, TensorBoard, CSVLogger
+from keras.optimizers import SGD
 import sys
 import os
 import argparse
 import json
 import numpy as np
 import pandas as pd
+import math
 from keras import backend as K
 from angular_losses import weighted_binary_crossentropy
 
@@ -117,7 +119,7 @@ def parse_arg():
 if __name__ == "__main__":
     #"""
     args = parse_arg()
-    save_name = str(args.height) + "x" + str(args.width) + "binary51_newlossnoexp_iter" + str(args.iteration) 
+    save_name = str(args.height) + "x" + str(args.width) + "binary51_sgd_newlossnoexp_iter" + str(args.iteration) 
     #save_name = "binary3_b2(32)_lr0.0002"
     #part = [2,11,24]
     class_num = args.classes
@@ -253,9 +255,11 @@ if __name__ == "__main__":
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
     #model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
-    model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
+    #model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
     #adam = Adam(lr=0.0002)
     #model.compile(loss=loss_func, optimizer=adam, loss_weights=loss_weights, metrics=metrics)
+    opt_sgd = SGD(lr=0.001, momentum=0.9, decay=0.0005, nesterov=False)
+    model.compile(loss=loss_func, optimizer=opt_sgd, loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
 
@@ -289,6 +293,13 @@ if __name__ == "__main__":
                                    mode='max', 
                                    period=1)
     csvlog = CSVLogger('../models/imagenet_models/' + model_dir + '/' + save_name+'_'+str(args.iteration)+'iter'+'_log.csv')#, append=True
+    def step_decay(epoch):
+        initial_lrate = 0.001
+        gamma = 0.75
+        step_size = 20000
+        lrate = initial_lrate * math.pow(gamma, math.floor((1+epoch) / step_size))
+        return lrate
+    lrate = LearningRateScheduler(step_decay)
     if args.weight != '':
         model.load_weights(args.weight, by_name=True)
     print(train_generator)
@@ -298,5 +309,5 @@ if __name__ == "__main__":
             epochs = nb_epoch,
             validation_data = val_generator,
             validation_steps = int(X_test_path.shape[0] / (batch_size * gpus_num)),
-            callbacks = [checkpointer, csvlog], workers=32)
+            callbacks = [checkpointer, csvlog, lrate], workers=32)
     model.save_weights('../models/imagenet_models/' + model_dir + '/' + save_name+ '_final_'+str(args.split)+'partion_'+str(args.iteration)+'iter_model.h5')
