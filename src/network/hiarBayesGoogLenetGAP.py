@@ -138,7 +138,7 @@ class hiarBayesGoogLeNetGAP:
         fea_low = Dense(1024, activation='relu')(fea_low)
         fea_mid = Dense(1024, activation='relu')(fea_mid)
         fea_hig = Dense(2048, activation='relu')(fea_hig)
-        #"""
+        """
         predictions_low = Dense(classes[0], activation="sigmoid", name="low")(fea_low)
         predictions_mid = Dense(classes[1], activation="sigmoid", name="middle")(fea_mid)
         predictions_hig = Dense(classes[2], activation="sigmoid", name="high")(fea_hig)

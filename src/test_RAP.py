@@ -184,6 +184,8 @@ if __name__ == "__main__":
     else:
         test_generator = generate_imgdata_from_file(X_test_path, y_test, batch_size, image_height, image_width)
     for w in tqdm.tqdm(weights):
+        #if os.path.exists("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_test_RAP.npy"):
+        #    continue
         model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
         #test_generator.reset()
         #predictions_list = model.predict_generator(test_generator, steps=y_test.shape[0]/batch_size)

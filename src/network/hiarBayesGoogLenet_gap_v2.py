@@ -120,7 +120,7 @@ class hiarBayesGoogLeNet:
         #"""
         predictions_low = Dense(classes[0], name="low", activation="sigmoid")(fea_low)#
         predictions_mid = Dense(classes[1], name="middle", activation="sigmoid")(fea_mid)#
-        predictions_hig = Dense(classes[2], name="high", activation="sigmoid")(fea_hig)#
+        predictions_hig = Dense(classes[2], name="high_fea", activation="sigmoid")(fea_hig)#
         """PCM2018"""
         #predictions_hig = Dense(classes[2], activation="sigmoid", name="high")(concatenate([fea_low, fea_mid, fea_hig], axis=1))
         """PCM2018"""
@@ -133,7 +133,8 @@ class hiarBayesGoogLeNet:
         predictions_hig_cond = Dense(classes[2], activation="sigmoid", name="high_cond")(predictions_priori)
         #predictions_priori = K.reshape(concatenate([predictions_low, predictions_mid], axis=1), (-1, classes[0]+classes[1], 1))
         #predictions_hig_cond = LSTM(classes[2], activation="sigmoid", name="high_cond")(predictions_priori)
-        predictions_hig_posterior = Lambda(lambda x:x[1] * x[0], name="high_post")([predictions_hig_cond, predictions_hig])
+        #predictions_hig_posterior = Lambda(lambda x:x[1] * x[0], name="high")([predictions_hig_cond, predictions_hig])
+        predictions_hig_posterior = Lambda(lambda x:K.sigmoid(K.tanh((x[1] - 0.5) * np.pi) * x[0]), name="high")([predictions_hig_cond, predictions_hig])
         #multi#Lambda(lambda x:x[0] * x[1], name="high_post")([predictions_hig_cond, predictions_hig])
         #cond#Dense(classes[2], activation="sigmoid", name="high_post")(concatenate([predictions_hig, predictions_hig_cond], axis=1))
         #add#Lambda(lambda x:(x[0] + x[1])/2, name="high_post")([predictions_hig_cond, predictions_hig])
@@ -142,7 +143,7 @@ class hiarBayesGoogLeNet:
         #predictions_mid = Activation("sigmoid")(predictions_mid)
         #predictions_hig_posterior = Activation("sigmoid")(predictions_hig_posterior)
         """mar"""
-        predictions = concatenate([predictions_low, predictions_mid, predictions_hig_posterior], axis=1)
+        #predictions = concatenate([predictions_low, predictions_mid, predictions_hig_posterior], axis=1)
         """PCM2018"""
         #predictions = concatenate([predictions_low, predictions_mid, predictions_hig], axis=1)
         """PCM2018"""
@@ -165,7 +166,7 @@ class hiarBayesGoogLeNet:
         x = Dense(classes, activation='softmax')(x)
         """
         # create the model
-        model = Model(inpt, predictions, name='inception')
+        model = Model(inpt, [predictions_low, predictions_mid, predictions_hig_posterior], name='inception')
         if weights == "imagenet":
             weights = np.load("../results/googlenet_weights.npy", encoding='latin1').item()
             for layer in model.layers:

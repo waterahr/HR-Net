@@ -8,6 +8,9 @@ python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imag
 from network.hiarGoogLenet import hiarGoogLeNet
 from network.hiarGoogLenetGAP import hiarGoogLeNetGAP
 from network.hiarBayesGoogLenetGAP import hiarBayesGoogLeNetGAP
+from network.hiarBayesGoogLenet_gap import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap
+from network.hiarBayesGoogLenet_gap_v2 import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap_v2
+from network.hiarBayesGoogLenet_gap_v3 import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap_v3
 from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
@@ -89,16 +92,48 @@ if __name__ == "__main__":
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62]#
     #"""
-    save_name = str(args.height) + "x" + str(args.width) + "binary51_newhier_newlossnoexp_split" + str(args.split)
+    #save_name = str(args.height) + "x" + str(args.width) + "binary51_newhier_newlossnoexp_split" + str(args.split)
+    save_name = ""
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
     high_level = [0,1,2,3]#,51,52,53,54,55,56,57,58,59,60,61,62
+    #low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    #mid_level = [4,5,6,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
+    #high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    mid_level_hs = [9,10,12,13,14]
+    mid_level_ub = [15,16,17,18,19,20,21,22,23]
+    mid_level_lb = [24,25,26,27,28,29]
+    mid_level_sh = [30,31,32,33,34]
+    mid_level_at = [35,36,37,38,39,40,41,42]
+    mid_level_ot = [4,5,6,7,8,43,44,45,46,47,48,49,50]
+    """
+    ##################### newnewhier
+    low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level_hs = [12,13,14]
+    mid_level_ub = [15,16,17,18,19,20,21,22,23]
+    mid_level_lb = [24,25,26,27,28,29]
+    mid_level_sh = [30,31,32,33,34]
+    mid_level_at = [35,36,37,38,39,40,41,42]
+    mid_level_ot = [4,5,6]
+    high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
     #"""
+    
+    """
+    low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level_hs = [12,13,14]
+    mid_level_ub = [15,16,17,18,19,20,21,22,23]
+    mid_level_lb = [24,25,26,27,28,29]
+    mid_level_sh = [30,31,32,33,34]
+    mid_level_at = [35,36,37,38,39,40,41,42]
+    mid_level_ot = [4,5,6]
+    high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    """
+    """
     save_name = str(args.height) + "x" + str(args.width) + "binary51_beforreduction_oldhier_newlossnoexp_split" + str(args.split)
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
-    #"""
+    """
     class_num = args.classes
 
 
@@ -153,6 +188,8 @@ if __name__ == "__main__":
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_path = np.array(data_path)
     data_y = data_y[:, list(np.hstack((low_level, mid_level, high_level)))]
+    if args.model == "hiarBayesGoogLeNet_gap_v3":
+        data_y = data_y[:, list(np.hstack((low_level, mid_level_hs, mid_level_ub, mid_level_lb, mid_level_sh, mid_level_at, mid_level_ot, high_level)))]
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
     split = np.load('../results/RAP_partion.npy').item()
     if load:
@@ -211,11 +248,33 @@ if __name__ == "__main__":
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNet_gap":
+        model_dir = 'hiarBayesGoogLeNetgap_RAP/'
+        model = hiarBayesGoogLeNet_gap.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNet_gap_v2":
+        model_dir = 'hiarBayesGoogLeNetgap_RAP/'
+        model = hiarBayesGoogLeNet_gap_v2.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = {"low":'binary_crossentropy', "middle":'binary_crossentropy', "high":'binary_crossentropy'}
+        is_multi = [len(low_level), len(mid_level), len(high_level)]
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNet_gap_v3":
+        model_dir = 'hiarBayesGoogLeNetgap_RAP/'
+        model = hiarBayesGoogLeNet_gap_v3.build(image_height, image_width, 3, [len(low_level), len(mid_level_hs), len(mid_level_ub), len(mid_level_lb), len(mid_level_sh), len(mid_level_at), len(mid_level_ot), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = {"low":'binary_crossentropy', "middle_hs":'binary_crossentropy', "middle_ub":'binary_crossentropy', "middle_lb":'binary_crossentropy', "middle_sh":'binary_crossentropy', "middle_at":'binary_crossentropy', "middle_ot":'binary_crossentropy', "high":'binary_crossentropy'}
+        is_multi = [len(low_level), len(mid_level_hs), len(mid_level_ub), len(mid_level_lb), len(mid_level_sh), len(mid_level_at), len(mid_level_ot), len(high_level)]
+        loss_weights = None
+        metrics=['accuracy']
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
     #model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
-    model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
+    #model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
     reg = args.weight + "_(e|f)1*"
@@ -229,12 +288,17 @@ if __name__ == "__main__":
     else:
         test_generator = generate_imgdata_from_file(X_test_path, y_test, batch_size, image_height, image_width)
     for w in tqdm.tqdm(weights):
+        #if os.path.exists("../results/predictions/" + args.model + '_' + save_name + w + "_predictions_imagenet_test_RAP.npy"):
+        #    continue
         model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
         #test_generator.reset()
         #predictions_list = model.predict_generator(test_generator, steps=y_test.shape[0]/batch_size)
         predictions_list = model.predict(X_test)
-        if args.model == "hiarBayesGoogLeNetv2":
-            predictions = np.array(predictions_list).reshape((class_num, -1)).T
+        #print(np.array(predictions_list).shape)
+        for i in predictions_list:
+            print(i.shape)
+        if args.model[-1] == '2' or args.model[-1] == '3':
+            predictions = np.hstack(predictions_list)
         else:
             predictions = np.array(predictions_list)
         print("The shape of the predictions_test is: ", predictions.shape)
