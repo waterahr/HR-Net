@@ -119,8 +119,9 @@ def parse_arg():
 if __name__ == "__main__":
     #"""
     args = parse_arg()
-    save_name = str(args.height) + "x" + str(args.width) + "binary51_sgd_newlossnoexp_iter" + str(args.iteration) 
+    #save_name = str(args.height) + "x" + str(args.width) + "binary51_sgd_newlossnoexp_iter" + str(args.iteration) 
     #save_name = "binary3_b2(32)_lr0.0002"
+    save_name = "sgd"
     #part = [2,11,24]
     class_num = args.classes
 
@@ -177,7 +178,7 @@ if __name__ == "__main__":
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_path = np.array(data_path)
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    split = np.load('../results/RAP_partion.npy').item()
+    split = np.load('../results/RAP_partion.npy', allow_pickle=True).item()
     if load:
         X_train = data_x[list(split['train'][args.split])]#[:26614]
     X_train_path = data_path[list(split['train'][args.split])]
@@ -218,6 +219,7 @@ if __name__ == "__main__":
         loss_weights = None
         #metrics=['accuracy']
         metrics = [weighted_acc]
+        metrics = [mA, 'accuracy']
     elif args.model == "GoogLeNetGAP":
         model = GoogLeNetGAP.build(image_height, image_width, 3, class_num)
         loss_func = weighted_binary_crossentropy(alpha)
@@ -259,6 +261,7 @@ if __name__ == "__main__":
     #adam = Adam(lr=0.0002)
     #model.compile(loss=loss_func, optimizer=adam, loss_weights=loss_weights, metrics=metrics)
     opt_sgd = SGD(lr=0.001, momentum=0.9, decay=0.0005, nesterov=False)
+    #opt_sgd = "adam"
     model.compile(loss=loss_func, optimizer=opt_sgd, loss_weights=loss_weights, metrics=metrics)
     model.summary()
 

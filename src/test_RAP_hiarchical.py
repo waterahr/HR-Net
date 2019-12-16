@@ -2,6 +2,7 @@
 python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP
 python test_RAP_hiarchical.py -m hiarGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/GoogLeNet_RAP
 python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -b 64 -g 1 -w ../models/imagenet_models/hiarBayesGoogLeNet_RAP/binary3_epoch50_valloss0.40.hdf5
+python test_RAP_hiarchical.py -m hiarBayesGoogLeNet -c 51 -g 1 -s 0 -wd 224 -hg 224 -w adam
 """
 #from network.hiarGoogLenetSPP import hiarGoogLeNetSPP
 #from network.hiarGoogLenetWAM import hiarGoogLeNetWAM
@@ -11,10 +12,13 @@ from network.hiarBayesGoogLenetGAP import hiarBayesGoogLeNetGAP
 from network.hiarBayesGoogLenet_gap import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap
 from network.hiarBayesGoogLenet_gap_v2 import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap_v2
 from network.hiarBayesGoogLenet_gap_v3 import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap_v3
+from network.hiarBayesGoogLenet_gap_v4 import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap_v4
+from network.hiarBayesGoogLenet_gap_v5 import hiarBayesGoogLeNet as hiarBayesGoogLeNet_gap_v5
 from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
 from network.hiarBayesGoogLenet import hiarBayesGoogLeNet
+from network.hiarBayesResNet import hiarBayesResNet
 from network.hiarBayesInception_v4 import hiarBayesInception_v4
 from network.hiarBayesGoogLenet_inception import hiarBayesGoogLeNet as hiarBayesGoogLeNet_inception
 from network.hiarGoogLenet_inception import hiarGoogLeNet as hiarGoogLeNet_inception
@@ -61,9 +65,9 @@ def parse_arg():
                         help='The total number of classes to be predicted')
     parser.add_argument('-b', '--batch', type=int, default=1,
                         help='The batch size of the training process')
-    parser.add_argument('-wd', '--width', type=int, default=120,
+    parser.add_argument('-wd', '--width', type=int, default=224,
                         help='The width of thWPAL_PETAe picture')
-    parser.add_argument('-hg', '--height', type=int, default=320,
+    parser.add_argument('-hg', '--height', type=int, default=224,
                         help='The height of the picture')
     parser.add_argument('-w', '--weight', type=str, default='',
                         help='The weights file of the pre-training')
@@ -81,42 +85,70 @@ def parse_arg():
 
 if __name__ == "__main__":
     args = parse_arg()
-    #"""
+    save_name = ""
+    low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level = [4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
+    high_level = [0,1,2,3,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
+    high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    
+    low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+    mid_level = [4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
+    high_level = [0,1,2,3]#,51,52,53,54,55,56,57,58,59,60,61,62
+    """
     save_name = "binary51_75v2_"
     low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
     #"""
+    """
     save_name = "binary92_oldhiar_newlossnoexp_split" + str(args.split)
     low_level = [11,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91]#
     mid_level = [9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
     high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62]#
     #"""
-    #save_name = str(args.height) + "x" + str(args.width) + "binary51_newhier_newlossnoexp_split" + str(args.split)
-    save_name = ""
-    low_level = [11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
-    mid_level = [4,5,6,7,8,9,10,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50]
-    high_level = [0,1,2,3]#,51,52,53,54,55,56,57,58,59,60,61,62
-    #low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
-    #mid_level = [4,5,6,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
-    #high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
-    mid_level_hs = [9,10,12,13,14]
-    mid_level_ub = [15,16,17,18,19,20,21,22,23]
-    mid_level_lb = [24,25,26,27,28,29]
-    mid_level_sh = [30,31,32,33,34]
-    mid_level_at = [35,36,37,38,39,40,41,42]
-    mid_level_ot = [4,5,6,7,8,43,44,45,46,47,48,49,50]
+    if args.model[-1] == '3':
+        #save_name = str(args.height) + "x" + str(args.width) + "binary51_newhier_newlossnoexp_split" + str(args.split)
+        
+        #low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+        #mid_level = [4,5,6,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42]
+        #high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+        mid_level_hs = [9,10,12,13,14]
+        mid_level_ub = [15,16,17,18,19,20,21,22,23]
+        mid_level_lb = [24,25,26,27,28,29]
+        mid_level_sh = [30,31,32,33,34]
+        mid_level_at = [35,36,37,38,39,40,41,42]
+        mid_level_ot = [4,5,6,7,8,43,44,45,46,47,48,49,50]
+        #"""
+        ##################### newnewhier
+        low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+        mid_level_hs = [12,13,14]
+        mid_level_ub = [15,16,17,18,19,20,21,22,23]
+        mid_level_lb = [24,25,26,27,28,29]
+        mid_level_sh = [30,31,32,33,34]
+        mid_level_at = [35,36,37,38,39,40,41,42]
+        mid_level_ot = [4,5,6]
+        high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+        #"""
     """
-    ##################### newnewhier
-    low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
-    mid_level_hs = [12,13,14]
+    ##################### newnewnewhier
+    low_level = [9,10,11,12,13,14,35,36,37,38,39,40,41,42]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
     mid_level_ub = [15,16,17,18,19,20,21,22,23]
     mid_level_lb = [24,25,26,27,28,29]
     mid_level_sh = [30,31,32,33,34]
-    mid_level_at = [35,36,37,38,39,40,41,42]
-    mid_level_ot = [4,5,6]
-    high_level = [0,1,2,3,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+    high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
     #"""
+    if args.model[-1] == '5':
+        #"""
+        ##################### newnewnewnewhier
+        low_level = [9,10,11,12,13,14]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
+        mid_level_ub = [15,16,17,18,19,20,21,22,23]
+        mid_level_lb = [24,25,26,27,28,29]
+        mid_level_sh = [30,31,32,33,34]
+        mid_level_at = [35,36,37,38,39,40,41,42]
+        high_level = [0,1,2,3,4,5,6,7,8,43,44,45,46,47,48,49,50]#,51,52,53,54,55,56,57,58,59,60,61,62
+        #"""
     
     """
     low_level = [9,10,11]#,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91
@@ -144,29 +176,13 @@ if __name__ == "__main__":
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=45,
-            width_shift_range=0.25,
-            height_shift_range=0.25,
-            horizontal_flip=True,
-            vertical_flip=False,
-            zoom_range=0.5,
-            channel_shift_range=0.5,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     else:
         datagen = ImageDataGenerator(
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=0,
-            width_shift_range=0.125,
-            height_shift_range=0.125,
-            horizontal_flip=True,
-            vertical_flip=False,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     image_width = args.width
     image_height = args.height
     #hiarBayesGoogLeNet
@@ -187,11 +203,8 @@ if __name__ == "__main__":
             data_x[i] = image.img_to_array(img)
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_path = np.array(data_path)
-    data_y = data_y[:, list(np.hstack((low_level, mid_level, high_level)))]
-    if args.model == "hiarBayesGoogLeNet_gap_v3":
-        data_y = data_y[:, list(np.hstack((low_level, mid_level_hs, mid_level_ub, mid_level_lb, mid_level_sh, mid_level_at, mid_level_ot, high_level)))]
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
-    split = np.load('../results/RAP_partion.npy').item()
+    split = np.load('../results/RAP_partion.npy', allow_pickle=True).item()
     if load:
         X_test = data_x[list(split['test'][args.split])]
     X_test_path = data_path[list(split['test'][args.split])]
@@ -209,7 +222,13 @@ if __name__ == "__main__":
         metrics=['accuracy']
     elif args.model == "hiarBayesGoogLeNet":
         model_dir = "hiarBayesGoogLeNet_RAP/"
-        model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
+        model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)], test=True)
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarBayesResNet":
+        model_dir = "hiarBayesResNet_RAP/"
+        model = hiarBayesResNet.build([len(low_level), len(mid_level), len(high_level)])#, test=True
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
@@ -270,6 +289,17 @@ if __name__ == "__main__":
         is_multi = [len(low_level), len(mid_level_hs), len(mid_level_ub), len(mid_level_lb), len(mid_level_sh), len(mid_level_at), len(mid_level_ot), len(high_level)]
         loss_weights = None
         metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNet_gap_v4":
+        model_dir = 'hiarBayesGoogLeNetgap_RAP/'
+        model = hiarBayesGoogLeNet_gap_v4.build(image_height, image_width, 3, [len(low_level), len(mid_level_ub), len(mid_level_lb), len(mid_level_sh), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = {"low":'binary_crossentropy', "middle_ub":'binary_crossentropy', "middle_lb":'binary_crossentropy', "middle_sh":'binary_crossentropy', "high":'binary_crossentropy'}
+        is_multi = [len(low_level), len(mid_level_ub), len(mid_level_lb), len(mid_level_sh), len(high_level)]
+        loss_weights = None
+        metrics=['accuracy']
+    elif args.model == "hiarBayesGoogLeNet_gap_v5":
+        model_dir = 'hiarBayesGoogLeNetgap_RAP/'
+        model = hiarBayesGoogLeNet_gap_v5.build(image_height, image_width, 3, [len(low_level), len(mid_level_ub), len(mid_level_lb), len(mid_level_sh), len(mid_level_at), len(high_level)])
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
@@ -279,6 +309,7 @@ if __name__ == "__main__":
 
     reg = args.weight + "_(e|f)1*"
     print(reg)
+    print(model_dir)
     weights = [s for s in os.listdir("../models/imagenet_models/" + model_dir) 
           if re.match(reg, s)]
     print(weights)
@@ -288,8 +319,8 @@ if __name__ == "__main__":
     else:
         test_generator = generate_imgdata_from_file(X_test_path, y_test, batch_size, image_height, image_width)
     for w in tqdm.tqdm(weights):
-        #if os.path.exists("../results/predictions/" + args.model + '_' + save_name + w + "_predictions_imagenet_test_RAP.npy"):
-        #    continue
+        if os.path.exists("../results/predictions/" + args.model + "_RAP_" + w + ".npy"):
+            continue
         model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
         #test_generator.reset()
         #predictions_list = model.predict_generator(test_generator, steps=y_test.shape[0]/batch_size)
@@ -297,11 +328,11 @@ if __name__ == "__main__":
         #print(np.array(predictions_list).shape)
         for i in predictions_list:
             print(i.shape)
-        if args.model[-1] == '2' or args.model[-1] == '3':
+        if args.model[-1] == '2' or args.model[-1] == '3' or args.model[-1] == '4' or args.model[-1] == '5':
             predictions = np.hstack(predictions_list)
         else:
             predictions = np.array(predictions_list)
         print("The shape of the predictions_test is: ", predictions.shape)
         #w[w.rindex('/')+1:w.rindex('.')]
-        np.save("../results/predictions/" + args.model + '_' + save_name + w + "_predictions_imagenet_test_RAP.npy", predictions)
-        print("../results/predictions/" + args.model + '_' + save_name + w + "_predictions_imagenet_test_RAP.npy")
+        np.save("../results/predictions/" + args.model + '_RAP_' + w + ".npy", predictions)
+        print("../results/predictions/" + args.model + '_RAP_' + w + ".npy")

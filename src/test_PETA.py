@@ -71,29 +71,13 @@ if __name__ == "__main__":
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=45,
-            width_shift_range=0.25,
-            height_shift_range=0.25,
-            horizontal_flip=True,
-            vertical_flip=False,
-            zoom_range=0.5,
-            channel_shift_range=0.5,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     else:
         datagen = ImageDataGenerator(
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=0,
-            width_shift_range=0.125,
-            height_shift_range=0.125,
-            horizontal_flip=True,
-            vertical_flip=False,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     image_width = args.width
     image_height = args.height
     filename = r"../results/PETA.csv"
@@ -164,6 +148,6 @@ if __name__ == "__main__":
         model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
         predictions = model.predict(X_test)
         print("The shape of the predictions_test is: ", predictions.shape)
-        np.save("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_all.npy", predictions)
-        print("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_all.npy")
+        np.save("../results/predictions/" + args.model + "_" + w + ".npy", predictions)
+        print("../results/predictions/" + args.model + "_" + w + ".npy")
     #np.save("../results/predictions/" + args.model+'_depth'+str(args.depth) + '_' + save_name + "_predictions50_imagenet_test7600.npy", predictions)

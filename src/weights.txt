@@ -1,0 +1,1 @@
+../models/imagenet_models/hiarGoogLeNet_RAP/227x227binary51_newhier_newlossnoexp_split0_epoch01_valloss0.67.hdf5

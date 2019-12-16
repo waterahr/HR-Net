@@ -112,7 +112,7 @@ class GoogLeNet:
         # return the constructed network architecture
         if weights == "imagenet":
             print("ImageNet...")
-            weights = np.load("../results/googlenet_weights.npy", encoding='latin1').item()
+            weights = np.load("../results/googlenet_weights.npy", encoding='latin1', allow_pickle=True).item()
             for layer in model.layers:
                 if layer.get_weights() == []:
                     continue

@@ -11,6 +11,7 @@ from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
 from network.hiarBayesGoogLenet import hiarBayesGoogLeNet
+from network.hiarBayesResNet import hiarBayesResNet
 from network.hiarBayesInception_v4 import hiarBayesInception_v4
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -39,9 +40,9 @@ def parse_arg():
                         help='The total number of classes to be predicted')
     parser.add_argument('-b', '--batch', type=int, default=64,
                         help='The batch size of the training process')
-    parser.add_argument('-wd', '--width', type=int, default=160,
+    parser.add_argument('-wd', '--width', type=int, default=224,
                         help='The width of thWPAL_PETAe picture')
-    parser.add_argument('-hg', '--height', type=int, default=75,
+    parser.add_argument('-hg', '--height', type=int, default=224,
                         help='The height of the picture')
     parser.add_argument('-w', '--weight', type=str, default='',
                         help='The weights file of the pre-training')
@@ -57,7 +58,7 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary61"
+    save_name = ""
     low_level = [27, 32, 50, 56]#, 61, 62, 63, 64
     mid_level = [0, 6, 7, 8, 9, 11, 12, 13, 17, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 57, 58, 59, 60]
     high_level = [1, 2, 3, 4, 5, 10, 14, 15, 16, 18, 19, 31, 34, 40]
@@ -96,44 +97,29 @@ if __name__ == "__main__":
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=45,
-            width_shift_range=0.25,
-            height_shift_range=0.25,
-            horizontal_flip=True,
-            vertical_flip=False,
-            zoom_range=0.5,
-            channel_shift_range=0.5,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     else:
         datagen = ImageDataGenerator(
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=0,
-            width_shift_range=0.125,
-            height_shift_range=0.125,
-            horizontal_flip=True,
-            vertical_flip=False,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     image_width = args.width
     image_height = args.height
-    filename = r"../results/PETA.csv"
+    filename = r"../results/PETA_sampled.csv"
+    filename = r"/home/anhaoran/data/pedestrian_attributes_PETA/PETA/PETA.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
     data_x = np.zeros((length, image_width, image_height, 3))
     data_y = np.zeros((length, class_num))
-    for i in range(11400, length):
+    for i in range(7100, length):#11400
         #img = image.load_img(path + m)
         img = image.load_img(data[i, 0], target_size=(image_width, image_height, 3))
         data_x[i] = image.img_to_array(img)
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_y = data_y[:, list(np.hstack((low_level, mid_level, high_level)))]
-    X_test = data_x[11400:]
-    y_test = data_y[11400:]#, len(low_level)+len(mid_level):
+    X_test = data_x[11400:]#7100
+    y_test = data_y[11400:]#, len(low_level)+len(mid_level):#7100
     if args.model == "hiarGoogLeNet_high":
         y_test = y_test[:, len(low_level)+len(mid_level):]
     elif args.model == "hiarGoogLeNet_mid":
@@ -194,6 +180,12 @@ if __name__ == "__main__":
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
+    elif args.model == "hiarBayesResNet":
+        model_dir = "hiarBayesResNet_PETA/"
+        model = hiarBayesResNet.build([len(low_level), len(mid_level), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_weights = None
+        metrics = ['accuracy']
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
@@ -208,8 +200,7 @@ if __name__ == "__main__":
     print(weights)
     for w in tqdm.tqdm(weights):
         model.load_weights("../models/imagenet_models/" + model_dir + w, by_name=True)
-
         predictions = model.predict(X_test)
         print("The shape of the predictions_test is: ", predictions.shape)
-        np.save("../results/predictions/" + args.model + '_' + save_name + "_" + w + "_predictions_imagenet_test7600.npy", predictions)
-        print("../results/predictions/" + args.model + '_' + save_name + "_" + w + "_predictions_imagenet_test7600.npy")
+        np.save("../results/predictions/" + args.model + "_" + w + ".npy", predictions)
+        print("../results/predictions/" + args.model + "_" + w + ".npy")

@@ -12,6 +12,7 @@ from network.hiarGoogLenet_high import hiarGoogLeNet_high
 from network.hiarGoogLenet_mid import hiarGoogLeNet_mid
 from network.hiarGoogLenet_low import hiarGoogLeNet_low
 from network.hiarBayesGoogLenet import hiarBayesGoogLeNet
+from network.hiarBayesResNet import hiarBayesResNet
 from network.hiarBayesInception_v4 import hiarBayesInception_v4
 from keras.preprocessing.image import ImageDataGenerator
 from keras.preprocessing import image
@@ -19,6 +20,7 @@ from keras.utils import multi_gpu_model
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, LearningRateScheduler, ReduceLROnPlateau, EarlyStopping, TensorBoard, CSVLogger
 import sys
+from keras.optimizers import *
 import os
 import argparse
 import json
@@ -49,9 +51,46 @@ def generate_imgdata_from_file(X_path, y, batch_size, image_height, image_width)
                 yield (np.array(X), np.array(Y))
                 X = []
                 Y = []
+                
+def mA(y_true, y_pred):
+    """
+    y_pred_np = K.eval(y_pred)
+    y_true_np = K.eval(y_true)
+    M = len(y_pred_np)
+    L = len(y_pred_np[0])
+    res = 0
+    for i in range(L):
+        P = sum(y_true_np[:, i])
+        N = M - P
+        TP = sum(y_pred_np[:, i]*y_true_np[:, i])
+        TN = list(y_pred_np[:, i]+y_true_np[:, i] == 0.).count(True)
+        #print(TP, P, TN, N)
+        #print(P,',', N,',', TP,',', TN)
+        #if P != 0:
+        res += TP/P + TN/N
+    return res / (2*L)
+    
+    y_pred = K.cast(y_pred >= 0.5, dtype='float32')
+    y_true = K.cast(y_true >= 0.5, dtype='float32')
+    #print(K.int_shape(y_true))
+    P = K.sum(y_true, axis=-1) + K.epsilon()
+    #print("P", P)
+    N = K.sum(1-y_true, axis=-1) + K.epsilon()
+    #print("N", N)
+    TP = K.sum(y_pred * y_true, axis=-1)
+    #print("TP", TP)
+    TN = K.sum(K.cast_to_floatx(y_pred + y_true == 0))
+    #print("TN", TN)
+    return K.mean(TP / P + TN / N) / 2"""
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)), axis=-1)
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)), axis=-1)
+    true_negatives = K.sum(K.round(K.clip((1 - y_true) * (1 - y_pred), 0, 1)), axis=-1)
+    possible_negatives = K.sum(K.round(K.clip(1 - y_true, 0, 1)), axis=-1)
+    mean_acc = (true_positives / (possible_positives + K.epsilon()) + true_negatives / (possible_negatives + K.epsilon())) / 2
+    return mean_acc
 
 def parse_arg():
-    models = ['hiarGoogLeNetSPP', 'hiarGoogLeNetWAM', 'hiarGoogLeNet', 'hiarBayesGoogLeNet', 'hiarGoogLeNet_high', 'hiarGoogLeNet_mid', 'hiarGoogLeNet_low']
+    models = ['hiarGoogLeNetSPP', 'hiarGoogLeNetWAM', 'hiarGoogLeNet', 'hiarBayesGoogLeNet', 'hiarGoogLeNet_high', 'hiarGoogLeNet_mid', 'hiarGoogLeNet_low', 'hiarBayesResNet']
     parser = argparse.ArgumentParser(description='training of the WPAL...')
     parser.add_argument('-g', '--gpus', type=str, default='',
                         help='The gpu device\'s ID need to be used')
@@ -59,9 +98,9 @@ def parse_arg():
                         help='The total number of classes to be predicted')
     parser.add_argument('-b', '--batch', type=int, default=64,
                         help='The batch size of the training process')
-    parser.add_argument('-wd', '--width', type=int, default=160,
+    parser.add_argument('-wd', '--width', type=int, default=224,
                         help='The width of thWPAL_PETAe picture')
-    parser.add_argument('-hg', '--height', type=int, default=75,
+    parser.add_argument('-hg', '--height', type=int, default=224,
                         help='The height of the picture')
     parser.add_argument('-w', '--weight', type=str, default='',
                         help='The weights file of the pre-training')
@@ -79,10 +118,13 @@ def parse_arg():
 
 if __name__ == "__main__":
     #"""
-    save_name = "binary61_newlossnoexp"
+    #save_name = "binary61_newlossnoexp_sampled"
+    save_name = "sgd"
+    save_name = "adam"
     low_level = [27, 32, 50, 56]#, 61, 62, 63, 64
     mid_level = [0, 6, 7, 8, 9, 11, 12, 13, 17, 20, 21, 22, 23, 24, 25, 26, 28, 29, 30, 33, 35, 36, 37, 38, 39, 41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 52, 53, 54, 55, 57, 58, 59, 60]
     high_level = [1, 2, 3, 4, 5, 10, 14, 15, 16, 18, 19, 31, 34, 40]
+    #"""
     """
     save_name = "binary61_cluster"
     low_level = [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31, 33, 34, 35, 37, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, 54, 55, 56, 57, 59, 60]
@@ -135,6 +177,13 @@ if __name__ == "__main__":
             zoom_range=0.5,
             channel_shift_range=0.5,
             fill_mode='nearest')
+        datagen = ImageDataGenerator(featurewise_center=True,
+                                 featurewise_std_normalization=True,
+                                 rotation_range=20,
+                                 width_shift_range=0.2,
+                                 height_shift_range=0.2,
+                                 horizontal_flip=True,
+                                 vertical_flip=True)
     else:
         datagen = ImageDataGenerator(
             featurewise_center=False,
@@ -151,9 +200,11 @@ if __name__ == "__main__":
     image_width = args.width
     image_height = args.height
     #hiarBayesGoogLeNet
-    filename = r"../results/PETA.csv"
+    filename = r"../results/PETA_sampled.csv"
+    filename = r"/home/anhaoran/data/pedestrian_attributes_PETA/PETA/PETA.csv"
     data = np.array(pd.read_csv(filename))[:, 1:]
     length = len(data)
+    print(length)
     #global alpha
     data_x = np.zeros((length, image_width, image_height, 3))
     """
@@ -188,13 +239,15 @@ if __name__ == "__main__":
     print("The positive ratio of each attribute is:\n", alpha)
     """
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
+    train_cnt = 9500#5700#9500
+    val_cnt = 11400#7100#11400
     if load:
-        X_train = data_x[:9500]
-        X_test = data_x[9500:11400]
-    X_train_path = data_path[:9500]
-    X_test_path = data_path[9500:11400]
-    y_train = data_y[:9500]#, len(low_level)+len(mid_level):
-    y_test = data_y[9500:11400]#, len(low_level)+len(mid_level):
+        X_train = data_x[:train_cnt]
+        X_test = data_x[train_cnt:val_cnt]
+    X_train_path = data_path[:train_cnt]
+    X_test_path = data_path[train_cnt:val_cnt]
+    y_train = data_y[:train_cnt]#, len(low_level)+len(mid_level):
+    y_test = data_y[train_cnt:val_cnt]#, len(low_level)+len(mid_level):
     alpha = np.sum(y_train, axis=0)#(len(data_y[0]), )
     alpha /= len(y_train)
     if args.model == "hiarGoogLeNet_high":
@@ -231,6 +284,7 @@ if __name__ == "__main__":
     elif args.model == "hiarGoogLeNet":
         model = hiarGoogLeNet.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func = 'binary_crossentropy'#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarGoogLeNet_high":
@@ -249,8 +303,9 @@ if __name__ == "__main__":
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarBayesGoogLeNet":
-        model = hiarBayesGoogLeNet.build(image_width, image_height, 3, [len(low_level), len(mid_level), len(high_level)])
+        model = hiarBayesGoogLeNet.build(image_height, image_width, 3, [len(low_level), len(mid_level), len(high_level)])
         loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "hiarBayesInception_v4":
@@ -260,11 +315,25 @@ if __name__ == "__main__":
         loss_weights = None
         metrics=['accuracy']
         metrics = [weighted_acc]
+    elif args.model == "hiarBayesResNet":
+        model = hiarBayesResNet.build([len(low_level), len(mid_level), len(high_level)])
+        loss_func ='binary_crossentropy'#bayes_binary_crossentropy(alpha, y_train)#weighted_categorical_crossentropy(alpha)
+        loss_func = weighted_binary_crossentropy(alpha)
+        loss_weights = None
+        metrics=['accuracy']
+        metrics = [weighted_acc]
+        metrics = [mA, 'accuracy']
     gpus_num = len(args.gpus.split(','))
     if gpus_num > 1:
         multi_gpu_model(model, gpus=gpus_num)
     #model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
-    model.compile(loss=loss_func, optimizer='adam', loss_weights=loss_weights, metrics=metrics)
+    #opt_sgd = Adam(lr=0.01, beta_1=0.9, beta_2=0.999, amsgrad=False)
+    #opt_sgd = RMSprop(lr=0.001, rho=0.9)
+    opt_sgd = Adagrad(lr=0.01)###***
+    opt_sgd = Adadelta(lr=1.0, rho=0.95)###***
+    #opt_sgd = Adamax(lr=0.002, beta_1=0.9, beta_2=0.999)###***
+    #opt_sgd = Nadam(lr=0.002, beta_1=0.9, beta_2=0.999)###***
+    model.compile(loss=loss_func, optimizer=opt_sgd, loss_weights=loss_weights, metrics=metrics)
     model.summary()
 
 
@@ -299,13 +368,15 @@ if __name__ == "__main__":
     elif args.model == "hiarGoogLeNet_low":
         model_dir = 'hiarGoogLeNet_PETA'
         save_name = 'binary61_low_duan'
+    elif args.model == "hiarBayesResNet":
+        model_dir = 'hiarBayesResNet_PETA'
     checkpointer = ModelCheckpoint(filepath = '../models/imagenet_models/' + model_dir + '/' + save_name+ '_epoch{epoch:02d}_valloss{'+ monitor + ':.2f}.hdf5',
                                    monitor = monitor,
                                    verbose=1, 
                                    save_best_only=True, 
                                    save_weights_only=True,
                                    mode='auto', 
-                                   period=25)
+                                   period=1)
     csvlog = CSVLogger('../models/imagenet_models/' + model_dir + '/' + save_name+'_'+str(args.iteration)+'iter'+'_log.csv')#, append=True
     if args.weight != '':
         model.load_weights(args.weight, by_name=True)

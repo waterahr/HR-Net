@@ -56,9 +56,9 @@ def parse_arg():
                         help='The total number of classes to be predicted')
     parser.add_argument('-b', '--batch', type=int, default=64,
                         help='The batch size of the training process')
-    parser.add_argument('-wd', '--width', type=int, default=160,
+    parser.add_argument('-wd', '--width', type=int, default=224,
                         help='The width of thWPAL_PETAe picture')
-    parser.add_argument('-hg', '--height', type=int, default=75,
+    parser.add_argument('-hg', '--height', type=int, default=224,
                         help='The height of the picture')
     parser.add_argument('-w', '--weight', type=str, default='',
                         help='The weights file of the pre-training')
@@ -79,7 +79,8 @@ def parse_arg():
 if __name__ == "__main__":
     args = parse_arg()
     #save_name = "binary61_depth" + str(args.depth)
-    save_name = "binary61_newlossnoexp"
+    #save_name = "binary61_newlossnoexp"
+    save_name = "adam"
     class_num = args.classes
     alpha = np.zeros((class_num,))
 
@@ -135,7 +136,7 @@ if __name__ == "__main__":
         #img = image.load_img(path + m)
         data_path.append(data[i, 0])
         if load:
-            img = image.load_img(data[i, 0], target_size=(image_height, image_width, 3))
+            img = image.load_img(data[i, 0], target_size=(image_width, image_height, 3))
             data_x[i] = image.img_to_array(img)
         data_y[i] = np.array(data[i, 1:1+class_num], dtype="float32")
     data_path = np.array(data_path)
@@ -170,6 +171,7 @@ if __name__ == "__main__":
     elif args.model == "GoogLeNet":
         model = GoogLeNet.build(image_width, image_height, 3, class_num, model_depth=args.depth)
         loss_func = 'binary_crossentropy'
+        loss_func = weighted_binary_crossentropy(alpha)
         loss_weights = None
         metrics=['accuracy']
     elif args.model == "Inception_v4":
@@ -225,14 +227,14 @@ if __name__ == "__main__":
         model_dir = 'OEDCWPAL_PETA'
     elif args.model == "OEDCGoogLeNetSPP_lowerBody":
         model_dir = 'OEDCWPAL_PETA_lowerBody'
-    checkpointer = ModelCheckpoint(filepath = '../models/imagenet_models/' + model_dir + '/' + save_name+ '_epoch{epoch:02d}_valloss{'+ monitor + ':.2f}.hdf5',
+    checkpointer = ModelCheckpoint(filepath = '../models/imagenet_models/' + model_dir + '/' + save_name + '_epoch{epoch:02d}_valloss{'+ monitor + ':.2f}.hdf5',
                                    monitor = monitor,
                                    verbose=1, 
                                    save_best_only=True, 
                                    save_weights_only=True,
                                    mode='auto', 
-                                   period=50)
-    csvlog = CSVLogger('../models/imagenet_models/' + model_dir + '/' + save_name+'_'+str(args.iteration)+'iter'+'_log.csv')#, append=True
+                                   period=1)
+    csvlog = CSVLogger('../models/imagenet_models/' + model_dir + '/' + save_name +'_'+str(args.iteration)+'iter'+'_log.csv')#, append=True
     if args.weight != '':
         model.load_weights(args.weight, by_name=True)
     model.fit_generator(train_generator,

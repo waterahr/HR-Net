@@ -4,6 +4,21 @@ import json
 import numpy as np
 import math
 from angular_nonlinear_activations import *
+    
+
+def focal_loss(gamma):
+
+    def loss_interface(y_true, y_pred):
+        epsilon = K.epsilon()
+        pt = y_pred * y_true + (1-y_pred) * (1-y_true)
+        pt = K.clip(pt, epsilon, 1-epsilon)
+        CE = -K.log(pt)
+        FL = K.pow(1-pt, gamma) * CE
+        loss = K.sum(FL, axis=1)
+        return loss
+
+    return loss_interface
+
 
 def bayes_binary_crossentropy_in(y_true, y_pred, alpha, label):
     #alpha is a N*N matrix, whose i'th row representing the i'th attribute rely on
@@ -66,7 +81,7 @@ def bayes_binary_crossentropy(alpha, label):
         return bayes_binary_crossentropy_in(y_true, y_pred, alpha, label)
     return loss_interface
 
-def weighted_binary_crossentropy(alpha):
+def weighted_binary_crossentropy(classes, alpha, gamma=[0, 2, 2]):
 
     def loss_interface(y_true, y_pred):
         """
@@ -102,14 +117,18 @@ def weighted_binary_crossentropy(alpha):
         weighted_b_ce = logits - logits * y_true - (y_true * alpha + 1 - y_true) * K.log(y_pred)
         #"""
         ###exp
-        weighted_b_ce = -alpha * y_true * K.log(y_pred + 1e-10) - alpha * (1.0 - y_true) * K.log(1.0 - y_pred + 1e-10)
+        #weighted_b_ce = -alpha * y_true * K.log(y_pred + 1e-10) - alpha * (1.0 - y_true) * K.log(1.0 - y_pred + 1e-10)
         ###noexp
         weighted_b_ce = -1 / (2 * alpha) * y_true * K.log(y_pred + 1e-10) - (1.0 - y_true)/ (2 * (1 - alpha))  * K.log(1.0 - y_pred + 1e-10)
-
+        return K.mean(weighted_b_ce, axis=-1)
+        """
+        weighted_b_ce_low = -1.0 / (2 * alpha[:classes[0]]) * y_true[:, :classes[0]] * K.log(y_pred[:, :classes[0]] + 1e-10) - (1.0 - y_true[:, :classes[0]]) / (2 * (1 - alpha[:classes[0]])) * K.log(1.0 - y_pred[:, :classes[0]] + 1e-10)
+        weighted_b_ce_mid = -1.0 / (2 *alpha[classes[0]:classes[0]+classes[1]]) * y_true[:, classes[0]:classes[0]+classes[1]] * K.log(y_pred[:, classes[0]:classes[0]+classes[1]] + 1e-10) - (1.0 - y_true[:, classes[0]:classes[0]+classes[1]]) / (2 * (1 - alpha[classes[0]:classes[0]+classes[1]])) * K.log(1.0 - y_pred[:, classes[0]:classes[0]+classes[1]] + 1e-10)#* K.pow(1.0 - y_pred[:, classes[0]:classes[0]+classes[1]], gamma[1]) * K.pow(y_pred[:, classes[0]:classes[0]+classes[1]], gamma[1])
+        weighted_b_ce_hig = -1.0 / (2 * alpha[classes[0]+classes[1]:]) * y_true[:, classes[0]+classes[1]:] * K.log(y_pred[:, classes[0]+classes[1]:] + 1e-10) - (1.0 - y_true[:, classes[0]+classes[1]:]) / (2 * (1 - alpha[classes[0]+classes[1]:])) * K.log(1.0 - y_pred[:, classes[0]+classes[1]:] + 1e-10)# * K.pow(1.0 - y_pred[:, classes[0]+classes[1]:], gamma[2]) * K.pow(y_pred[:, classes[0]+classes[1]:], gamma[2])
 
         # Return the mean error
-        #return K.mean(K.binary_crossentropy(y_pred, y_true), axis=-1)
-        return K.mean(weighted_b_ce, axis=-1)
+        return (K.mean(weighted_b_ce_low, axis=-1) + K.mean(weighted_b_ce_mid, axis=-1) + K.mean(weighted_b_ce_hig, axis=-1)) / 3
+        """
 
     return loss_interface
 

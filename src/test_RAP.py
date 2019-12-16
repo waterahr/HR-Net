@@ -79,29 +79,13 @@ if __name__ == "__main__":
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=45,
-            width_shift_range=0.25,
-            height_shift_range=0.25,
-            horizontal_flip=True,
-            vertical_flip=False,
-            zoom_range=0.5,
-            channel_shift_range=0.5,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     else:
         datagen = ImageDataGenerator(
             featurewise_center=False,
             samplewise_center=False,
             featurewise_std_normalization=False,
-            samplewise_std_normalization=False,
-            zca_whitening=False,
-            rotation_range=0,
-            width_shift_range=0.125,
-            height_shift_range=0.125,
-            horizontal_flip=True,
-            vertical_flip=False,
-            fill_mode='nearest')
+            samplewise_std_normalization=False)
     image_width = args.width
     image_height = args.height
     #hiarBayesGoogLeNet
@@ -126,7 +110,7 @@ if __name__ == "__main__":
     #class_num = 3
     #X_train, X_test, y_train, y_test = train_test_split(data_x, data_y, test_size=0.3, random_state=0)
     #"""
-    split = np.load('../results/RAP_partion.npy').item()
+    split = np.load('../results/RAP_partion.npy', allow_pickle=True).item()
     if load:
         X_test = data_x[list(split['test'][args.split])]
     X_test_path = data_path[list(split['test'][args.split])]
@@ -195,5 +179,5 @@ if __name__ == "__main__":
         else:
             predictions = np.array(predictions_list)
         print("The shape of the predictions_test is: ", predictions.shape)
-        np.save("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_test_RAP.npy", predictions)
-        print("../results/predictions/" + args.model+ '_' + save_name + "_" + w + "_predictions_imagenet_test_RAP.npy")
+        np.save("../results/predictions/" + args.model + "_" + w + ".npy", predictions)
+        print("../results/predictions/" + args.model + "_" + w + ".npy")
